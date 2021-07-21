@@ -1,19 +1,27 @@
+import React from 'react'
 import { Link, Route, Switch } from 'react-router-dom'
 
 // Auto generates routes from files under ./pages
 // https://vitejs.dev/guide/features.html#glob-import
-console.log('import.meta', import.meta.glob);
+// console.log('import.meta', import.meta.glob);
 
-const pages = import.meta.glob('./pages/*.jsx')
+// const pages = import.meta.glob('./pages/*.jsx')
 
-const routes = Object.keys(pages).map((path) => {
-  const name = path.match(/\.\/pages\/(.*)\.jsx$/)[1]
-  return {
+// const routes = Object.keys(pages).map((path) => {
+//   const name = path.match(/\.\/pages\/(.*)\.jsx$/)[1]
+//   return {
+//     name,
+//     path: name === 'Home' ? '/' : `/${name.toLowerCase()}`,
+//     component: pages[path].default
+//   }
+// })
+
+console.log('home',  import('./pages/Home'))
+const routes = [{
     name,
-    path: name === 'Home' ? '/' : `/${name.toLowerCase()}`,
-    component: pages[path].default
-  }
-})
+    path: '/',
+    component: import('./pages/Home')
+}]
 
 export function App() {
   return (
