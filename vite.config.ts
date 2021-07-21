@@ -1,5 +1,3 @@
-import * as reactPlugin from 'vite-plugin-react'
-// import type { UserConfig } from 'vite'
 import reactRefresh from '@vitejs/plugin-react-refresh'
 
 /**
@@ -7,10 +5,10 @@ import reactRefresh from '@vitejs/plugin-react-refresh'
  */
 module.exports = {
   jsx: 'react',
-  plugins: [reactRefresh(), reactPlugin],
-  esbuild: {
-    jsxInject: `import React from 'react';`
-  },
+  plugins: [reactRefresh()],
+  // esbuild: {
+  //   jsxInject: `import React from 'react';`
+  // },
   build: {
     minify: false
   }
