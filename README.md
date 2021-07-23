@@ -6,8 +6,9 @@ vite + react + ssr + ts
 
 ## 合理避坑
 
-yarn dev 启动过程中, yarn add 可能遇到报错:
+yarn dev 启动过程中, yarn / yarn add 可能遇到报错:
 ```
 [3/4] Linking dependencies...    
 error An unexpected error occurred: "EPERM: operation not permitte\vite-react-ssr\\node_modules\\esbuild\\esbuild.exe'".
 ```
+只需要退出 yarn dev，重新 yarn / yarn add 即可。
