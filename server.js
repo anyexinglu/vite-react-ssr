@@ -1,7 +1,13 @@
 // @ts-check
 const fs = require("fs");
+const React = require("react");
 const path = require("path");
 const express = require("express");
+const fast = require("./fast");
+// const Document = require("./Document");
+// const { renderToString } = require("react-dom/server");
+
+// console.log("...Document", Document);
 
 const isTest = process.env.NODE_ENV === "test" || !!process.env.VITE_TEST_BUILD;
 
@@ -11,56 +17,54 @@ async function createServer(
 ) {
   const resolve = p => path.resolve(__dirname, p);
 
-  const indexProd = isProd
-    ? fs.readFileSync(resolve("dist/client/index.html"), "utf-8")
-    : "";
-
   const app = express();
 
   /**
    * @type {import('vite').ViteDevServer}
    */
-  let vite;
-  if (!isProd) {
-    vite = await require("vite").createServer({
-      root,
-      logLevel: isTest ? "error" : "info",
-      server: {
-        middlewareMode: "ssr",
-        watch: {
-          // During tests we edit the files too fast and sometimes chokidar
-          // misses change events, so enforce polling for consistency
-          usePolling: true,
-          interval: 100,
-        },
+
+  let vite = await require("vite").createServer({
+    // await fast.createServer({
+    root,
+    logLevel: isTest ? "error" : "info",
+    server: {
+      middlewareMode: "ssr",
+      watch: {
+        // During tests we edit the files too fast and sometimes chokidar
+        // misses change events, so enforce polling for consistency
+        usePolling: true,
+        interval: 100,
       },
-    });
-    console.log("...vite", vite.middlewares, vite);
-    // use vite's connect instance as middleware
-    app.use(vite.middlewares);
-  } else {
-    app.use(require("compression")());
-    app.use(
-      require("serve-static")(resolve("dist/client"), {
-        index: false,
-      })
-    );
-  }
+    },
+  });
+
+  // let vite = await require("vite").createServer({
+  //   root,
+  //   logLevel: isTest ? "error" : "info",
+  //   server: {
+  //     middlewareMode: "ssr",
+  //     watch: {
+  //       // During tests we edit the files too fast and sometimes chokidar
+  //       // misses change events, so enforce polling for consistency
+  //       usePolling: true,
+  //       interval: 100,
+  //     },
+  //   },
+  // });
+  // console.log("...vite", vite.middlewares, vite);
+  // // use vite's connect instance as middleware
+  // app.use(vite.middlewares);
 
   app.use("*", async (req, res) => {
     try {
       const url = req.originalUrl;
 
-      let template, render;
-      if (!isProd) {
-        // always read fresh template in dev
-        template = fs.readFileSync(resolve("index.html"), "utf-8");
-        template = await vite.transformIndexHtml(url, template);
-        render = (await vite.ssrLoadModule("/src/entry-server.jsx")).render;
-      } else {
-        template = indexProd;
-        render = require("./dist/server/entry-server.js").render;
-      }
+      // always read fresh template in dev
+      let template = fs.readFileSync(resolve("index.html"), "utf-8");
+      console.log("...url, template", url, template);
+      template = await vite.transformIndexHtml(url, template);
+      let render = (await vite.ssrLoadModule("/src/entry-server.jsx")).render;
+      console.log("...template2", template);
 
       const context = {};
       const appHtml = render(url, context);
@@ -70,17 +74,22 @@ async function createServer(
         return res.redirect(301, context.url);
       }
 
+      // let Page = require(`./src/pages/About`).default;
+      // const body = renderToString(
+      //   React.createElement(Document, { children: React.createElement(Page) })
+      // );
+
       const html = template.replace(`<!--app-html-->`, appHtml);
 
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (e) {
-      !isProd && vite.ssrFixStacktrace(e);
+      // !isProd && vite.ssrFixStacktrace(e);
       console.log(e.stack);
       res.status(500).end(e.stack);
     }
   });
 
-  return { app, vite };
+  return { app };
 }
 
 if (!isTest) {
