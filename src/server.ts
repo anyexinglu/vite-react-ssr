@@ -53,12 +53,12 @@ export async function createServer(
 
       // always read fresh template in dev
       let template = fs.readFileSync(resolve("index.html"), "utf-8");
-      console.log("...url, template", url, template);
       template = await vite.transformIndexHtml(url, template);
+      // let template = fs.readFileSync(resolve("template.html"), "utf-8");
       let render = (await vite.ssrLoadModule("/src/entry-server.jsx")).render;
-      console.log("...template2", template);
 
       const context = {} as any;
+      debugger;
       const appHtml = render(url, context);
 
       if (context.url) {
