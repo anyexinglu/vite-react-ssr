@@ -1,9 +1,17 @@
 // @ts-check
-const fs = require("fs");
-const React = require("react");
-const path = require("path");
-const express = require("express");
-const fast = require("./fast");
+import fs from "fs";
+// import * as React from "react";
+// import * as path from "path";
+import express from "express";
+import theVite from "vite";
+import path from "path";
+const __dirname = path.resolve();
+
+// // As Abel said, ES Modules in Node >= 14 no longer have require by default.
+// import { createRequire } from "module";
+// const require = createRequire(import.meta.url);
+
+// import fast from "./viteServer";
 // const Document = require("./Document");
 // const { renderToString } = require("react-dom/server");
 
@@ -11,7 +19,7 @@ const fast = require("./fast");
 
 const isTest = process.env.NODE_ENV === "test" || !!process.env.VITE_TEST_BUILD;
 
-async function createServer(
+export async function createServer(
   root = process.cwd(),
   isProd = process.env.NODE_ENV === "production"
 ) {
@@ -19,12 +27,9 @@ async function createServer(
 
   const app = express();
 
-  /**
-   * @type {import('vite').ViteDevServer}
-   */
-
-  let vite = await require("vite").createServer({
-    // await fast.createServer({
+  // let vite = await fast.createServer({
+  let vite = await theVite.createServer({
+    //
     root,
     logLevel: isTest ? "error" : "info",
     server: {
@@ -38,19 +43,6 @@ async function createServer(
     },
   });
 
-  // let vite = await require("vite").createServer({
-  //   root,
-  //   logLevel: isTest ? "error" : "info",
-  //   server: {
-  //     middlewareMode: "ssr",
-  //     watch: {
-  //       // During tests we edit the files too fast and sometimes chokidar
-  //       // misses change events, so enforce polling for consistency
-  //       usePolling: true,
-  //       interval: 100,
-  //     },
-  //   },
-  // });
   // console.log("...vite", vite.middlewares, vite);
   // // use vite's connect instance as middleware
   // app.use(vite.middlewares);
@@ -66,7 +58,7 @@ async function createServer(
       let render = (await vite.ssrLoadModule("/src/entry-server.jsx")).render;
       console.log("...template2", template);
 
-      const context = {};
+      const context = {} as any;
       const appHtml = render(url, context);
 
       if (context.url) {
@@ -99,6 +91,3 @@ if (!isTest) {
     })
   );
 }
-
-// for test use
-exports.createServer = createServer;

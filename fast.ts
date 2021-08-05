@@ -1,5 +1,5 @@
 async function createServer(inlineConfig = {}) {
-  // const config = await resolveConfig(inlineConfig, 'serve', 'development');
+  const config = await resolveConfig(inlineConfig, "serve", "development");
   // const root = config.root;
   // const serverConfig = config.server;
   // const httpsOptions = await resolveHttpsConfig(config);
@@ -26,60 +26,63 @@ async function createServer(inlineConfig = {}) {
   // const closeHttpServer = createServerCloseFn(httpServer);
   // // eslint-disable-next-line prefer-const
   // let exitProcess;
-  // const server = {
-  //     config: config,
-  //     middlewares,
-  //     get app() {
-  //         config.logger.warn(`ViteDevServer.app is deprecated. Use ViteDevServer.middlewares instead.`);
-  //         return middlewares;
-  //     },
-  //     httpServer,
-  //     watcher,
-  //     pluginContainer: container,
-  //     ws,
-  //     moduleGraph,
-  //     transformWithEsbuild,
-  //     transformRequest(url, options) {
-  //         return transformRequest(url, server, options);
-  //     },
-  //     transformIndexHtml: null,
-  //     ssrLoadModule(url) {
-  //         if (!server._ssrExternals) {
-  //             server._ssrExternals = resolveSSRExternal(config, server._optimizeDepsMetadata
-  //                 ? Object.keys(server._optimizeDepsMetadata.optimized)
-  //                 : []);
-  //         }
-  //         return ssrLoadModule(url, server);
-  //     },
-  //     ssrFixStacktrace(e) {
-  //         if (e.stack) {
-  //             const stacktrace = ssrRewriteStacktrace(e.stack, moduleGraph);
-  //             rebindErrorStacktrace(e, stacktrace);
-  //         }
-  //     },
-  //     listen(port, isRestart) {
-  //         return startServer(server, port, isRestart);
-  //     },
-  //     async close() {
-  //         process.off('SIGTERM', exitProcess);
-  //         if (!middlewareMode && process.env.CI !== 'true') {
-  //             process.stdin.off('end', exitProcess);
-  //         }
-  //         await Promise.all([
-  //             watcher.close(),
-  //             ws.close(),
-  //             container.close(),
-  //             closeHttpServer()
-  //         ]);
-  //     },
-  //     _optimizeDepsMetadata: null,
-  //     _ssrExternals: null,
-  //     _globImporters: {},
-  //     _isRunningOptimizer: false,
-  //     _registerMissingImport: null,
-  //     _pendingReload: null
-  // };
-  // server.transformIndexHtml = createDevHtmlTransformFn(server);
+  const server = {
+    //     config: config,
+    //     middlewares,
+    //     get app() {
+    //         config.logger.warn(`ViteDevServer.app is deprecated. Use ViteDevServer.middlewares instead.`);
+    //         return middlewares;
+    //     },
+    //     httpServer,
+    //     watcher,
+    //     pluginContainer: container,
+    //     ws,
+    //     moduleGraph,
+    //     transformWithEsbuild,
+    //     transformRequest(url, options) {
+    //         return transformRequest(url, server, options);
+    //     },
+    transformIndexHtml: null,
+    ssrLoadModule(url) {
+      if (!server._ssrExternals) {
+        server._ssrExternals = resolveSSRExternal(
+          config,
+          server._optimizeDepsMetadata
+            ? Object.keys(server._optimizeDepsMetadata.optimized)
+            : []
+        );
+      }
+      return ssrLoadModule(url, server);
+    },
+    //     ssrFixStacktrace(e) {
+    //         if (e.stack) {
+    //             const stacktrace = ssrRewriteStacktrace(e.stack, moduleGraph);
+    //             rebindErrorStacktrace(e, stacktrace);
+    //         }
+    //     },
+    //     listen(port, isRestart) {
+    //         return startServer(server, port, isRestart);
+    //     },
+    //     async close() {
+    //         process.off('SIGTERM', exitProcess);
+    //         if (!middlewareMode && process.env.CI !== 'true') {
+    //             process.stdin.off('end', exitProcess);
+    //         }
+    //         await Promise.all([
+    //             watcher.close(),
+    //             ws.close(),
+    //             container.close(),
+    //             closeHttpServer()
+    //         ]);
+    //     },
+    _optimizeDepsMetadata: null,
+    _ssrExternals: null,
+    //     _globImporters: {},
+    //     _isRunningOptimizer: false,
+    //     _registerMissingImport: null,
+    //     _pendingReload: null
+  };
+  server.transformIndexHtml = createDevHtmlTransformFn(server);
   // exitProcess = async () => {
   //     try {
   //         await server.close();
@@ -235,15 +238,6 @@ async function createServer(inlineConfig = {}) {
   // return server;
 }
 
-//    function ssrLoadModule(url) {
-//       if (!server._ssrExternals) {
-//           server._ssrExternals = resolveSSRExternal(config, server._optimizeDepsMetadata
-//               ? Object.keys(server._optimizeDepsMetadata.optimized)
-//               : []);
-//       }
-//       return ssrLoadModule(url, server);
-//   },
-
-module.exports = {
+export default {
   createServer,
 };

@@ -9,4 +9,4 @@ function Document({ children }: any) {
   );
 }
 
-module.exports = Document;
+export default Document;
