@@ -8,18 +8,20 @@
       "./types"
     ],
     "moduleResolution": "node",
+    "module": "commonjs",
+//    "module": "ESNext",
+    "sourceMap": true,
     "allowJs": true,
     "skipLibCheck": false,
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": false,
     "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "esModuleInterop": true
   },
   "include": ["src"]
 }

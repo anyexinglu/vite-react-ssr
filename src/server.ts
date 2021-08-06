@@ -3,7 +3,9 @@ import fs from "fs";
 // import * as React from "react";
 // import * as path from "path";
 import express from "express";
-import theVite from "vite";
+import * as theVite from "vite";
+const viteCreateServer = theVite.createServer;
+// import { createServer as viteCreateServer } from "vite"; // from "./node/server";
 // import * as theVite from "./vite/node/server";
 import path from "path";
 
@@ -15,7 +17,7 @@ import path from "path";
 // const entryClient = require("./entry-client.static");
 // console.log("...entryClient", entryClient, entryClient.render);
 
-const __dirname = path.resolve();
+// const __dirname = path.resolve();
 
 // import fast from "./viteServer";
 // const Document = require("./Document");
@@ -34,7 +36,7 @@ export async function createServer(
   const app = express();
 
   // let vite = await fast.createServer({
-  let vite = await theVite.createServer({
+  let vite = await viteCreateServer({
     //
     root,
     logLevel: isTest ? "error" : "info",
@@ -51,7 +53,7 @@ export async function createServer(
 
   console.log("...vite", vite.middlewares, vite);
   // // use vite's connect instance as middleware
-  app.use(vite.middlewares);
+  // app.use(vite.middlewares);
 
   app.use("*", async (req, res) => {
     try {
@@ -60,7 +62,7 @@ export async function createServer(
       // always read fresh template in dev
       // let template = fs.readFileSync(resolve("index.html"), "utf-8");
       // template = await vite.transformIndexHtml(url, template);
-      let template = fs.readFileSync(resolve("template.html"), "utf-8");
+      let template = fs.readFileSync(resolve("../template.html"), "utf-8");
       let render = (await vite.ssrLoadModule("src/entry-server.jsx")).render;
 
       const context = {} as any;

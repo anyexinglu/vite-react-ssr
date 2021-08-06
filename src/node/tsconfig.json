@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.json",
   "include": ["./", "../../types"],
   "exclude": ["**/__tests__"],
   "compilerOptions": {
@@ -9,6 +9,7 @@
     "outDir": "../../dist/node",
     "module": "commonjs",
     "lib": ["ESNext"],
-    "sourceMap": true
+    "sourceMap": true,
+    "esModuleInterop": true
   }
 }
