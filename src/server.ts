@@ -4,12 +4,18 @@ import fs from "fs";
 // import * as path from "path";
 import express from "express";
 import theVite from "vite";
+// import * as theVite from "./vite/node/server";
 import path from "path";
-const __dirname = path.resolve();
 
 // // As Abel said, ES Modules in Node >= 14 no longer have require by default.
 // import { createRequire } from "module";
+
+// import entryClient from "./entry-client.static";
 // const require = createRequire(import.meta.url);
+// const entryClient = require("./entry-client.static");
+// console.log("...entryClient", entryClient, entryClient.render);
+
+const __dirname = path.resolve();
 
 // import fast from "./viteServer";
 // const Document = require("./Document");
@@ -43,22 +49,22 @@ export async function createServer(
     },
   });
 
-  // console.log("...vite", vite.middlewares, vite);
+  console.log("...vite", vite.middlewares, vite);
   // // use vite's connect instance as middleware
-  // app.use(vite.middlewares);
+  app.use(vite.middlewares);
 
   app.use("*", async (req, res) => {
     try {
       const url = req.originalUrl;
 
       // always read fresh template in dev
-      let template = fs.readFileSync(resolve("index.html"), "utf-8");
-      template = await vite.transformIndexHtml(url, template);
-      // let template = fs.readFileSync(resolve("template.html"), "utf-8");
-      let render = (await vite.ssrLoadModule("/src/entry-server.jsx")).render;
+      // let template = fs.readFileSync(resolve("index.html"), "utf-8");
+      // template = await vite.transformIndexHtml(url, template);
+      let template = fs.readFileSync(resolve("template.html"), "utf-8");
+      let render = (await vite.ssrLoadModule("src/entry-server.jsx")).render;
 
       const context = {} as any;
-      debugger;
+
       const appHtml = render(url, context);
 
       if (context.url) {

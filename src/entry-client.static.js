@@ -1,4 +1,4 @@
-(function anonymous(
+export default function anonymous(
   global,
   __vite_ssr_exports__,
   __vite_ssr_import_meta__,
@@ -6,6 +6,7 @@
   __vite_ssr_dynamic_import__,
   __vite_ssr_exportAll__
 ) {
+  console.log("...__vite_ssr_import__", __vite_ssr_import__);
   const __vite_ssr_import_0__ = __vite_ssr_import__("react");
 
   const __vite_ssr_import_1__ = __vite_ssr_import__("react-dom/server");
@@ -38,4 +39,4 @@
     },
   });
   //# sourceURL=/src/entry-server.jsx
-});
+}
