@@ -316,86 +316,7 @@ export async function createServer(
   inlineConfig: any = {}
 ): Promise<ViteDevServer> {
   const config = await resolveConfig(inlineConfig, "serve", "development");
-  // const config = {
-  //   jsx: "react",
-  //   plugins: [
-  //     { name: "alias" },
-  //     { name: "react-refresh", enforce: "pre" },
-  //     { name: "vite:dynamic-import-polyfill" },
-  //     { name: "vite:resolve" },
-  //     { name: "vite:esbuild" },
-  //     { name: "vite:asset" },
-  //     { name: "vite:define" },
-  //     { name: "vite:client-inject" },
-  //     { name: "vite:import-analysis" },
-  //   ],
-  //   build: {
-  //     target: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
-  //     polyfillDynamicImport: false,
-  //     outDir: "dist",
-  //     assetsDir: "assets",
-  //     assetsInlineLimit: 4096,
-  //     cssCodeSplit: true,
-  //     sourcemap: false,
-  //     rollupOptions: {},
-  //     commonjsOptions: { include: [{}], extensions: [".js", ".cjs"] },
-  //     dynamicImportVarsOptions: { warnOnError: true, exclude: [{}] },
-  //     minify: false,
-  //     terserOptions: {},
-  //     cleanCssOptions: {},
-  //     write: true,
-  //     emptyOutDir: null,
-  //     manifest: false,
-  //     lib: false,
-  //     ssr: false,
-  //     ssrManifest: false,
-  //     brotliSize: true,
-  //     chunkSizeWarningLimit: 500,
-  //     watch: null,
-  //   },
-  //   root: "/Users/yangxiayan/Documents/duoduo/vite/vite-react-ssr",
-  //   logLevel: "info",
-  //   server: {
-  //     middlewareMode: "ssr",
-  //     watch: { usePolling: true, interval: 100 },
-  //     fs: { allow: ["/Users/yangxiayan/Documents/duoduo/vite/vite-react-ssr"] },
-  //   },
-  //   configFile:
-  //     "/Users/yangxiayan/Documents/duoduo/vite/vite-react-ssr/vite.config.ts",
-  //   configFileDependencies: ["vite.config.ts"],
-  //   inlineConfig: {
-  //     root: "/Users/yangxiayan/Documents/duoduo/vite/vite-react-ssr",
-  //     logLevel: "info",
-  //     server: {
-  //       middlewareMode: "ssr",
-  //       watch: { usePolling: true, interval: 100 },
-  //       fs: {
-  //         allow: ["/Users/yangxiayan/Documents/duoduo/vite/vite-react-ssr"],
-  //       },
-  //     },
-  //   },
-  //   base: "/",
-  //   resolve: { alias: [{ find: {} }] },
-  //   publicDir: "/Users/yangxiayan/Documents/duoduo/vite/vite-react-ssr/public",
-  //   cacheDir:
-  //     "/Users/yangxiayan/Documents/duoduo/vite/vite-react-ssr/node_modules/.vite",
-  //   command: "serve",
-  //   mode: "development",
-  //   isProduction: false,
-  //   env: { BASE_URL: "/", MODE: "development", DEV: true, PROD: false },
-  //   logger: { hasWarned: false },
-  //   // createResolver,
-  //   optimizeDeps: {
-  //     esbuildOptions: { keepNames: undefined },
-  //     keepNames: undefined,
-  //     //   (_b = config.optimizeDeps) === null || _b === void 0
-  //     //     ? void 0
-  //     //     : _b.keepNames,
-  //     // ...((_c = config.optimizeDeps) === null || _c === void 0
-  //     //   ? void 0
-  //     //   : _c.esbuildOptions),
-  //   },
-  // };
+  console.log("...config", config);
   //  await resolveConfig(inlineConfig, "serve", "development");
   const root = config.root;
   const serverConfig = config.server;
@@ -522,13 +443,15 @@ export async function createServer(
     // }
   });
 
-  // watcher.on("add", file => {
-  //   handleFileAddUnlink(normalizePath(file), server);
-  // });
+  watcher.on("add", file => {
+    console.log("...watch add");
+    // handleFileAddUnlink(normalizePath(file), server);
+  });
 
-  // watcher.on("unlink", file => {
-  //   handleFileAddUnlink(normalizePath(file), server, true);
-  // });
+  watcher.on("unlink", file => {
+    console.log("...watch unlink");
+    // handleFileAddUnlink(normalizePath(file), server, true);
+  });
 
   // apply server configuration hooks from plugins
   const postHooks: ((() => void) | void)[] = [];

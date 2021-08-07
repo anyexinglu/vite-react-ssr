@@ -46,23 +46,23 @@ export async function handleHMRUpdate(
   const { ws, config, moduleGraph } = server;
   const shortFile = getShortName(file, config.root);
 
-  const isConfig = file === config.configFile;
-  const isConfigDependency = config.configFileDependencies.some(
-    name => file === path.resolve(name)
-  );
-  const isEnv = config.inlineConfig.envFile !== false && file.endsWith(".env");
-  if (isConfig || isConfigDependency || isEnv) {
-    // auto restart server
-    debugHmr(`[config change] ${chalk.dim(shortFile)}`);
-    config.logger.info(
-      chalk.green(
-        `${path.relative(process.cwd(), file)} changed, restarting server...`
-      ),
-      { clear: true, timestamp: true }
-    );
-    await restartServer(server);
-    return;
-  }
+  // const isConfig = file === config.configFile;
+  // const isConfigDependency = config.configFileDependencies.some(
+  //   name => file === path.resolve(name)
+  // );
+  // const isEnv = config.inlineConfig.envFile !== false && file.endsWith(".env");
+  // if (isConfig || isConfigDependency || isEnv) {
+  //   // auto restart server
+  //   debugHmr(`[config change] ${chalk.dim(shortFile)}`);
+  //   config.logger.info(
+  //     chalk.green(
+  //       `${path.relative(process.cwd(), file)} changed, restarting server...`
+  //     ),
+  //     { clear: true, timestamp: true }
+  //   );
+  //   await restartServer(server);
+  //   return;
+  // }
 
   debugHmr(`[file change] ${chalk.dim(shortFile)}`);
 
@@ -87,14 +87,14 @@ export async function handleHMRUpdate(
     server,
   };
 
-  for (const plugin of config.plugins) {
-    if (plugin.handleHotUpdate) {
-      const filteredModules = await plugin.handleHotUpdate(hmrContext);
-      if (filteredModules) {
-        hmrContext.modules = filteredModules;
-      }
-    }
-  }
+  // for (const plugin of config.plugins) {
+  //   if (plugin.handleHotUpdate) {
+  //     const filteredModules = await plugin.handleHotUpdate(hmrContext);
+  //     if (filteredModules) {
+  //       hmrContext.modules = filteredModules;
+  //     }
+  //   }
+  // }
 
   if (!hmrContext.modules.length) {
     // html file cannot be hot updated
