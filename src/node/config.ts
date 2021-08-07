@@ -311,9 +311,9 @@ export async function resolveConfig(
   };
 
   // load .env files
-  const envDir = config.envDir
-    ? normalizePath(path.resolve(resolvedRoot, config.envDir))
-    : resolvedRoot;
+  // const envDir = config.envDir
+  //   ? normalizePath(path.resolve(resolvedRoot, config.envDir))
+  //   : resolvedRoot;
   const userEnv = inlineConfig.envFile !== false && {}; // loadEnv(mode, envDir);
 
   // Note it is possible for user to have a custom mode, e.g. `staging` where
@@ -327,7 +327,7 @@ export async function resolveConfig(
   }
 
   // resolve public base url
-  const BASE_URL = resolveBaseUrl(config.base, command === "build", logger);
+  const BASE_URL = "/"; // resolveBaseUrl(config.base, command === "build", logger);
   const resolvedBuildOptions = {
     target: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
     polyfillDynamicImport: false,
@@ -403,7 +403,7 @@ export async function resolveConfig(
             ],
           }));
       }
-      return (await container.resolveId(id, importer, undefined, ssr))?.id;
+      return (await container?.resolveId(id, importer, undefined, ssr))?.id;
     };
   };
 
@@ -560,52 +560,52 @@ export async function resolveConfig(
  * Resolve base. Note that some users use Vite to build for non-web targets like
  * electron or expects to deploy
  */
-function resolveBaseUrl(
-  base: UserConfig["base"] = "/",
-  isBuild: boolean,
-  logger: Logger
-): string {
-  // #1669 special treatment for empty for same dir relative base
-  if (base === "" || base === "./") {
-    return isBuild ? base : "/";
-  }
-  if (base.startsWith(".")) {
-    logger.warn(
-      chalk.yellow.bold(
-        `(!) invalid "base" option: ${base}. The value can only be an absolute ` +
-          `URL, ./, or an empty string.`
-      )
-    );
-    base = "/";
-  }
+// function resolveBaseUrl(
+//   base: UserConfig["base"] = "/",
+//   isBuild: boolean,
+//   logger: Logger
+// ): string {
+//   // #1669 special treatment for empty for same dir relative base
+//   if (base === "" || base === "./") {
+//     return isBuild ? base : "/";
+//   }
+//   if (base.startsWith(".")) {
+//     logger.warn(
+//       chalk.yellow.bold(
+//         `(!) invalid "base" option: ${base}. The value can only be an absolute ` +
+//           `URL, ./, or an empty string.`
+//       )
+//     );
+//     base = "/";
+//   }
 
-  // external URL
-  if (isExternalUrl(base)) {
-    if (!isBuild) {
-      // get base from full url during dev
-      const parsed = parseUrl(base);
-      base = parsed.pathname || "/";
-    }
-  } else {
-    // ensure leading slash
-    if (!base.startsWith("/")) {
-      logger.warn(
-        chalk.yellow.bold(`(!) "base" option should start with a slash.`)
-      );
-      base = "/" + base;
-    }
-  }
+//   // external URL
+//   if (isExternalUrl(base)) {
+//     if (!isBuild) {
+//       // get base from full url during dev
+//       const parsed = parseUrl(base);
+//       base = parsed.pathname || "/";
+//     }
+//   } else {
+//     // ensure leading slash
+//     if (!base.startsWith("/")) {
+//       logger.warn(
+//         chalk.yellow.bold(`(!) "base" option should start with a slash.`)
+//       );
+//       base = "/" + base;
+//     }
+//   }
 
-  // ensure ending slash
-  if (!base.endsWith("/")) {
-    logger.warn(
-      chalk.yellow.bold(`(!) "base" option should end with a slash.`)
-    );
-    base += "/";
-  }
+//   // ensure ending slash
+//   if (!base.endsWith("/")) {
+//     logger.warn(
+//       chalk.yellow.bold(`(!) "base" option should end with a slash.`)
+//     );
+//     base += "/";
+//   }
 
-  return base;
-}
+//   return base;
+// }
 
 function mergeConfigRecursively(
   a: Record<string, any>,

@@ -3,9 +3,9 @@ import fs from "fs";
 // import * as React from "react";
 // import * as path from "path";
 import express from "express";
-import * as theVite from "vite";
-const viteCreateServer = theVite.createServer;
-// import { createServer as viteCreateServer } from "./node/server";
+// import * as theVite from "vite";
+// const viteCreateServer = theVite.createServer;
+import { createServer as viteCreateServer } from "./node/server";
 // import * as theVite from "./vite/node/server";
 import path from "path";
 
@@ -58,6 +58,7 @@ export async function createServer(
   app.use("*", async (req, res) => {
     try {
       const url = req.originalUrl;
+      console.log("...get url:", url);
       if (url.includes("html")) {
         debugger;
       }
