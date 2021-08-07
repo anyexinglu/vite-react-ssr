@@ -67305,13 +67305,13 @@ async function handleHMRUpdate(file, server) {
     const isConfig = file === config.configFile;
     const isConfigDependency = config.configFileDependencies.some((name) => file === path__default.resolve(name));
     const isEnv = config.inlineConfig.envFile !== false && file.endsWith('.env');
-    if (isConfig || isConfigDependency || isEnv) {
-        // auto restart server
-        debugHmr(`[config change] ${source.dim(shortFile)}`);
-        config.logger.info(source.green(`${path__default.relative(process.cwd(), file)} changed, restarting server...`), { clear: true, timestamp: true });
-        await restartServer(server);
-        return;
-    }
+    // if (isConfig || isConfigDependency || isEnv) {
+    //     // auto restart server
+    //     debugHmr(`[config change] ${source.dim(shortFile)}`);
+    //     config.logger.info(source.green(`${path__default.relative(process.cwd(), file)} changed, restarting server...`), { clear: true, timestamp: true });
+    //     await restartServer(server);
+    //     return;
+    // }
     debugHmr(`[file change] ${source.dim(shortFile)}`);
     // (dev only) the client itself cannot be hot updated.
     if (file.startsWith(normalizedClientDir)) {
@@ -67331,14 +67331,14 @@ async function handleHMRUpdate(file, server) {
         read: () => readModifiedFile(file),
         server
     };
-    for (const plugin of config.plugins) {
-        if (plugin.handleHotUpdate) {
-            const filteredModules = await plugin.handleHotUpdate(hmrContext);
-            if (filteredModules) {
-                hmrContext.modules = filteredModules;
-            }
-        }
-    }
+    // for (const plugin of config.plugins) {
+    //     if (plugin.handleHotUpdate) {
+    //         const filteredModules = await plugin.handleHotUpdate(hmrContext);
+    //         if (filteredModules) {
+    //             hmrContext.modules = filteredModules;
+    //         }
+    //     }
+    // }
     if (!hmrContext.modules.length) {
         // html file cannot be hot updated
         if (file.endsWith('.html')) {
