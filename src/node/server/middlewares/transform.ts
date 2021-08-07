@@ -22,7 +22,7 @@ import {
   DEP_VERSION_RE,
   NULL_BYTE_PLACEHOLDER,
 } from "../../constants";
-import { isCSSRequest, isDirectCSSRequest } from "../../plugins/css";
+// import { isCSSRequest, isDirectCSSRequest } from "../../plugins/css";
 
 /**
  * Time (ms) Vite has to full-reload the page before returning
@@ -134,7 +134,7 @@ export function transformMiddleware(
       if (
         isJSRequest(url) ||
         isImportRequest(url) ||
-        isCSSRequest(url) ||
+        // isCSSRequest(url) ||
         isHTMLProxy(url)
       ) {
         // strip ?import
@@ -145,9 +145,9 @@ export function transformMiddleware(
 
         // for CSS, we need to differentiate between normal CSS requests and
         // imports
-        if (isCSSRequest(url) && req.headers.accept?.includes("text/css")) {
-          url = injectQuery(url, "direct");
-        }
+        // if (isCSSRequest(url) && req.headers.accept?.includes("text/css")) {
+        //   url = injectQuery(url, "direct");
+        // }
 
         // check if we can return 304 early
         const ifNoneMatch = req.headers["if-none-match"];
@@ -166,7 +166,7 @@ export function transformMiddleware(
           html: req.headers.accept?.includes("text/html"),
         });
         if (result) {
-          const type = isDirectCSSRequest(url) ? "css" : "js";
+          const type = "js"; // isDirectCSSRequest(url) ? "css" : "js";
           const isDep =
             DEP_VERSION_RE.test(url) ||
             (cacheDirPrefix && url.startsWith(cacheDirPrefix));

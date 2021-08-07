@@ -5,7 +5,7 @@ import fs from "fs";
 import express from "express";
 import * as theVite from "vite";
 const viteCreateServer = theVite.createServer;
-// import { createServer as viteCreateServer } from "vite"; // from "./node/server";
+// import { createServer as viteCreateServer } from "./node/server";
 // import * as theVite from "./vite/node/server";
 import path from "path";
 
@@ -58,6 +58,9 @@ export async function createServer(
   app.use("*", async (req, res) => {
     try {
       const url = req.originalUrl;
+      if (url.includes("html")) {
+        debugger;
+      }
 
       // always read fresh template in dev
       // let template = fs.readFileSync(resolve("index.html"), "utf-8");

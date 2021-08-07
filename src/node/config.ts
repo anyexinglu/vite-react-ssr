@@ -1,13 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { Plugin } from "./plugin";
-import { resolveBuildOptions } from "./build";
+// import { resolveBuildOptions } from "./build";
 import {
   ResolvedServerOptions,
   resolveServerOptions,
   ServerOptions,
 } from "./server";
-import { CSSOptions } from "./plugins/css";
+// import { CSSOptions } from "./plugins/css";
 import {
   createDebugger,
   isExternalUrl,
@@ -17,7 +17,7 @@ import {
 } from "./utils";
 import { resolvePlugins } from "./plugins";
 import chalk from "chalk";
-import { ESBuildOptions } from "./plugins/esbuild";
+// import { ESBuildOptions } from "./plugins/esbuild";
 // import dotenv from "dotenv";
 // import dotenvExpand from "dotenv-expand";
 // import { Alias, AliasOptions } from "types/alias";
@@ -30,7 +30,7 @@ import {
 import { createLogger, Logger, LogLevel } from "./logger";
 import { DepOptimizationOptions } from "./optimizer";
 import { createFilter } from "@rollup/pluginutils";
-import { ResolvedBuildOptions } from ".";
+// import { ResolvedBuildOptions } from ".";
 import { parse as parseUrl } from "url";
 import { JsonOptions } from "./plugins/json";
 import {
@@ -115,7 +115,7 @@ export interface UserConfig {
   /**
    * CSS related options (preprocessors and CSS modules)
    */
-  css?: CSSOptions;
+  // css?: CSSOptions;
   /**
    * JSON loading options
    */
@@ -212,7 +212,7 @@ export type ResolvedConfig = Readonly<
     };
     plugins: readonly Plugin[];
     server: ResolvedServerOptions;
-    build: ResolvedBuildOptions;
+    build: any;
     assetsInclude: (file: string) => boolean;
     logger: Logger;
     createResolver: (options?: Partial<InternalResolveOptions>) => ResolveFn;

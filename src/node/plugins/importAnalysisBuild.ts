@@ -1,25 +1,25 @@
-import path from 'path'
-import { ResolvedConfig } from '../config'
-import { Plugin } from '../plugin'
-import MagicString from 'magic-string'
-import { ImportSpecifier, init, parse as parseImports } from 'es-module-lexer'
-import { OutputChunk } from 'rollup'
-import { chunkToEmittedCssFileMap } from './css'
-import { transformImportGlob } from '../importGlob'
+import path from "path";
+import { ResolvedConfig } from "../config";
+import { Plugin } from "../plugin";
+import MagicString from "magic-string";
+import { ImportSpecifier, init, parse as parseImports } from "es-module-lexer";
+import { OutputChunk } from "rollup";
+// import { chunkToEmittedCssFileMap } from "./css";
+import { transformImportGlob } from "../importGlob";
 
 /**
  * A flag for injected helpers. This flag will be set to `false` if the output
  * target is not native es - so that injected helper logic can be conditionally
  * dropped.
  */
-export const isModernFlag = `__VITE_IS_MODERN__`
-export const preloadMethod = `__vitePreload`
-export const preloadMarker = `__VITE_PRELOAD__`
-export const preloadBaseMarker = `__VITE_PRELOAD_BASE__`
+export const isModernFlag = `__VITE_IS_MODERN__`;
+export const preloadMethod = `__vitePreload`;
+export const preloadMarker = `__VITE_PRELOAD__`;
+export const preloadBaseMarker = `__VITE_PRELOAD_BASE__`;
 
-const preloadHelperId = 'vite/preload-helper'
-const preloadCode = `let scriptRel;const seen = {};const base = '${preloadBaseMarker}';export const ${preloadMethod} = ${preload.toString()}`
-const preloadMarkerRE = new RegExp(`"${preloadMarker}"`, 'g')
+const preloadHelperId = "vite/preload-helper";
+const preloadCode = `let scriptRel;const seen = {};const base = '${preloadBaseMarker}';export const ${preloadMethod} = ${preload.toString()}`;
+const preloadMarkerRE = new RegExp(`"${preloadMarker}"`, "g");
 
 /**
  * Helper for preloading CSS and direct imports of async chunks in parallel to
@@ -28,112 +28,112 @@ const preloadMarkerRE = new RegExp(`"${preloadMarker}"`, 'g')
 function preload(baseModule: () => Promise<{}>, deps?: string[]) {
   // @ts-ignore
   if (!__VITE_IS_MODERN__ || !deps || deps.length === 0) {
-    return baseModule()
+    return baseModule();
   }
 
   // @ts-ignore
   if (scriptRel === undefined) {
     // @ts-ignore
-    const relList = document.createElement('link').relList
+    const relList = document.createElement("link").relList;
     // @ts-ignore
     scriptRel =
-      relList && relList.supports && relList.supports('modulepreload')
-        ? 'modulepreload'
-        : 'preload'
+      relList && relList.supports && relList.supports("modulepreload")
+        ? "modulepreload"
+        : "preload";
   }
 
   return Promise.all(
-    deps.map((dep) => {
+    deps.map(dep => {
       // @ts-ignore
-      dep = `${base}${dep}`
+      dep = `${base}${dep}`;
       // @ts-ignore
-      if (dep in seen) return
+      if (dep in seen) return;
       // @ts-ignore
-      seen[dep] = true
-      const isCss = dep.endsWith('.css')
-      const cssSelector = isCss ? '[rel="stylesheet"]' : ''
+      seen[dep] = true;
+      const isCss = dep.endsWith(".css");
+      const cssSelector = isCss ? '[rel="stylesheet"]' : "";
       // @ts-ignore check if the file is already preloaded by SSR markup
       if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
-        return
+        return;
       }
       // @ts-ignore
-      const link = document.createElement('link')
+      const link = document.createElement("link");
       // @ts-ignore
-      link.rel = isCss ? 'stylesheet' : scriptRel
+      link.rel = isCss ? "stylesheet" : scriptRel;
       if (!isCss) {
-        link.as = 'script'
-        link.crossOrigin = ''
+        link.as = "script";
+        link.crossOrigin = "";
       }
-      link.href = dep
+      link.href = dep;
       // @ts-ignore
-      document.head.appendChild(link)
+      document.head.appendChild(link);
       if (isCss) {
         return new Promise((res, rej) => {
-          link.addEventListener('load', res)
-          link.addEventListener('error', rej)
-        })
+          link.addEventListener("load", res);
+          link.addEventListener("error", rej);
+        });
       }
     })
-  ).then(() => baseModule())
+  ).then(() => baseModule());
 }
 
 /**
  * Build only. During serve this is performed as part of ./importAnalysis.
  */
 export function buildImportAnalysisPlugin(config: ResolvedConfig): Plugin {
-  const ssr = !!config.build.ssr
+  const ssr = !!config.build.ssr;
 
   return {
-    name: 'vite:import-analysis',
+    name: "vite:import-analysis",
 
     resolveId(id) {
       if (id === preloadHelperId) {
-        return id
+        return id;
       }
     },
 
     load(id) {
       if (id === preloadHelperId) {
-        return preloadCode.replace(preloadBaseMarker, config.base)
+        return preloadCode.replace(preloadBaseMarker, config.base);
       }
     },
 
     async transform(source, importer) {
       if (
-        importer.includes('node_modules') &&
-        !source.includes('import.meta.glob')
+        importer.includes("node_modules") &&
+        !source.includes("import.meta.glob")
       ) {
-        return
+        return;
       }
 
-      await init
+      await init;
 
-      let imports: readonly ImportSpecifier[] = []
+      let imports: readonly ImportSpecifier[] = [];
       try {
-        imports = parseImports(source)[0]
+        imports = parseImports(source)[0];
       } catch (e) {
-        this.error(e, e.idx)
+        this.error(e, e.idx);
       }
 
       if (!imports.length) {
-        return null
+        return null;
       }
 
-      let s: MagicString | undefined
-      const str = () => s || (s = new MagicString(source))
-      let needPreloadHelper = false
+      let s: MagicString | undefined;
+      const str = () => s || (s = new MagicString(source));
+      let needPreloadHelper = false;
 
       for (let index = 0; index < imports.length; index++) {
         const {
           s: start,
           e: end,
           ss: expStart,
-          d: dynamicIndex
-        } = imports[index]
+          d: dynamicIndex,
+        } = imports[index];
 
         const isGlob =
-          source.slice(start, end) === 'import.meta' &&
-          source.slice(end, end + 5) === '.glob'
+          source.slice(start, end) === "import.meta" &&
+          source.slice(end, end + 5) === ".glob";
 
         // import.meta.glob
         if (isGlob) {
@@ -146,21 +146,21 @@ export function buildImportAnalysisPlugin(config: ResolvedConfig): Plugin {
               config.root,
               undefined,
               ssr
-            )
-          str().prepend(importsString)
-          str().overwrite(expStart, endIndex, exp)
+            );
+          str().prepend(importsString);
+          str().overwrite(expStart, endIndex, exp);
           if (!isEager) {
-            needPreloadHelper = true
+            needPreloadHelper = true;
           }
-          continue
+          continue;
         }
 
         if (dynamicIndex > -1 && !ssr) {
-          needPreloadHelper = true
-          const dynamicEnd = source.indexOf(`)`, end) + 1
-          const original = source.slice(dynamicIndex, dynamicEnd)
-          const replacement = `${preloadMethod}(() => ${original},${isModernFlag}?"${preloadMarker}":void 0)`
-          str().overwrite(dynamicIndex, dynamicEnd, replacement)
+          needPreloadHelper = true;
+          const dynamicEnd = source.indexOf(`)`, end) + 1;
+          const original = source.slice(dynamicIndex, dynamicEnd);
+          const replacement = `${preloadMethod}(() => ${original},${isModernFlag}?"${preloadMarker}":void 0)`;
+          str().overwrite(dynamicIndex, dynamicEnd, replacement);
         }
       }
 
@@ -169,106 +169,106 @@ export function buildImportAnalysisPlugin(config: ResolvedConfig): Plugin {
         !ssr &&
         !source.includes(`const ${preloadMethod} =`)
       ) {
-        str().prepend(`import { ${preloadMethod} } from "${preloadHelperId}";`)
+        str().prepend(`import { ${preloadMethod} } from "${preloadHelperId}";`);
       }
 
       if (s) {
         return {
           code: s.toString(),
-          map: config.build.sourcemap ? s.generateMap({ hires: true }) : null
-        }
+          map: config.build.sourcemap ? s.generateMap({ hires: true }) : null,
+        };
       }
     },
 
     renderChunk(code, _, { format }) {
       // make sure we only perform the preload logic in modern builds.
       if (code.indexOf(isModernFlag) > -1) {
-        const re = new RegExp(isModernFlag, 'g')
-        const isModern = String(format === 'es')
+        const re = new RegExp(isModernFlag, "g");
+        const isModern = String(format === "es");
         if (config.build.sourcemap) {
-          const s = new MagicString(code)
-          let match
+          const s = new MagicString(code);
+          let match;
           while ((match = re.exec(code))) {
             s.overwrite(
               match.index,
               match.index + isModernFlag.length,
               isModern
-            )
+            );
           }
           return {
             code: s.toString(),
-            map: s.generateMap({ hires: true })
-          }
+            map: s.generateMap({ hires: true }),
+          };
         } else {
-          return code.replace(re, isModern)
+          return code.replace(re, isModern);
         }
       }
-      return null
+      return null;
     },
 
     generateBundle({ format }, bundle) {
-      if (format !== 'es' || ssr) {
-        return
+      if (format !== "es" || ssr) {
+        return;
       }
 
-      const isPolyfillEnabled = config.build.polyfillDynamicImport
+      const isPolyfillEnabled = config.build.polyfillDynamicImport;
       for (const file in bundle) {
-        const chunk = bundle[file]
+        const chunk = bundle[file];
         // can't use chunk.dynamicImports.length here since some modules e.g.
         // dynamic import to constant json may get inlined.
-        if (chunk.type === 'chunk' && chunk.code.indexOf(preloadMarker) > -1) {
-          const code = chunk.code
-          let imports: ImportSpecifier[]
+        if (chunk.type === "chunk" && chunk.code.indexOf(preloadMarker) > -1) {
+          const code = chunk.code;
+          let imports: ImportSpecifier[];
           try {
-            imports = parseImports(code)[0].filter((i) => i.d > -1)
+            imports = parseImports(code)[0].filter(i => i.d > -1);
           } catch (e) {
-            this.error(e, e.idx)
+            this.error(e, e.idx);
           }
 
           if (imports.length) {
-            const s = new MagicString(code)
+            const s = new MagicString(code);
             for (let index = 0; index < imports.length; index++) {
-              const { s: start, e: end, d: dynamicIndex } = imports[index]
+              const { s: start, e: end, d: dynamicIndex } = imports[index];
               // if dynamic import polyfill is used, rewrite the import to
               // use the polyfilled function.
               if (isPolyfillEnabled) {
-                s.overwrite(dynamicIndex, dynamicIndex + 6, `__import__`)
+                s.overwrite(dynamicIndex, dynamicIndex + 6, `__import__`);
               }
               // check the chunk being imported
-              const url = code.slice(start, end)
-              const deps: Set<string> = new Set()
+              const url = code.slice(start, end);
+              const deps: Set<string> = new Set();
 
               if (url[0] === `"` && url[url.length - 1] === `"`) {
-                const ownerFilename = chunk.fileName
+                const ownerFilename = chunk.fileName;
                 // literal import - trace direct imports and add to deps
-                const analyzed: Set<string> = new Set<string>()
+                const analyzed: Set<string> = new Set<string>();
                 const addDeps = (filename: string) => {
-                  if (filename === ownerFilename) return
-                  if (analyzed.has(filename)) return
-                  analyzed.add(filename)
-                  const chunk = bundle[filename] as OutputChunk | undefined
+                  if (filename === ownerFilename) return;
+                  if (analyzed.has(filename)) return;
+                  analyzed.add(filename);
+                  const chunk = bundle[filename] as OutputChunk | undefined;
                   if (chunk) {
-                    deps.add(chunk.fileName)
-                    const cssFiles = chunkToEmittedCssFileMap.get(chunk)
-                    if (cssFiles) {
-                      cssFiles.forEach((file) => {
-                        deps.add(file)
-                      })
-                    }
-                    chunk.imports.forEach(addDeps)
+                    deps.add(chunk.fileName);
+                    // const cssFiles = chunkToEmittedCssFileMap.get(chunk)
+                    // if (cssFiles) {
+                    //   cssFiles.forEach((file) => {
+                    //     deps.add(file)
+                    //   })
+                    // }
+                    chunk.imports.forEach(addDeps);
                   }
-                }
+                };
                 const normalizedFile = path.posix.join(
                   path.posix.dirname(chunk.fileName),
                   url.slice(1, -1)
-                )
-                addDeps(normalizedFile)
+                );
+                addDeps(normalizedFile);
               }
 
-              let markPos = code.indexOf(preloadMarker, end)
+              let markPos = code.indexOf(preloadMarker, end);
               // fix issue #3051
               if (markPos === -1 && imports.length === 1) {
-                markPos = code.indexOf(preloadMarker)
+                markPos = code.indexOf(preloadMarker);
               }
 
               if (markPos > 0) {
@@ -278,20 +278,20 @@ export function buildImportAnalysisPlugin(config: ResolvedConfig): Plugin {
                   // the dep list includes the main chunk, so only need to
                   // preload when there are actual other deps.
                   deps.size > 1
-                    ? `[${[...deps].map((d) => JSON.stringify(d)).join(',')}]`
+                    ? `[${[...deps].map(d => JSON.stringify(d)).join(",")}]`
                     : `[]`
-                )
+                );
               }
             }
-            chunk.code = s.toString()
+            chunk.code = s.toString();
             // TODO source map
           }
 
           // there may still be markers due to inlined dynamic imports, remove
           // all the markers regardless
-          chunk.code = chunk.code.replace(preloadMarkerRE, 'void 0')
+          chunk.code = chunk.code.replace(preloadMarkerRE, "void 0");
         }
       }
-    }
-  }
+    },
+  };
 }
