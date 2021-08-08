@@ -32,7 +32,7 @@ import { DepOptimizationOptions } from "./optimizer";
 import { createFilter } from "@rollup/pluginutils";
 // import { ResolvedBuildOptions } from ".";
 import { parse as parseUrl } from "url";
-import { JsonOptions } from "./plugins/json";
+// import { JsonOptions } from "./plugins/json";
 import {
   createPluginContainer,
   PluginContainer,
@@ -119,7 +119,7 @@ export interface UserConfig {
   /**
    * JSON loading options
    */
-  json?: JsonOptions;
+  json?: any;
   /**
    * Transform options to pass to esbuild.
    * Or set to `false` to disable esbuild.

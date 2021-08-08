@@ -49,7 +49,7 @@ export type {
 //   HtmlTagDescriptor,
 // } from "./plugins/html";
 // export type { CSSOptions, CSSModulesOptions } from "./plugins/css";
-export type { JsonOptions } from "./plugins/json";
+// export type { JsonOptions } from "./plugins/json";
 export type { ESBuildOptions, ESBuildTransformResult } from "./plugins/esbuild";
 export type {
   PackageData,
