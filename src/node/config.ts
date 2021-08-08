@@ -275,19 +275,23 @@ export async function resolveConfig(
   const rawUserPlugins = (config.plugins || []).flat().filter(p => {
     return p && (!p.apply || p.apply === command);
   }) as Plugin[];
-  const [prePlugins, normalPlugins, postPlugins] =
-    sortUserPlugins(rawUserPlugins);
+  // 事实上，目前只有 prePlugins：react-refresh
+  // const [prePlugins, normalPlugins, postPlugins] =
+  //   sortUserPlugins(rawUserPlugins);
 
+  const prePlugins = rawUserPlugins,
+    normalPlugins = [],
+    postPlugins = [];
   // run config hooks
-  const userPlugins = [...prePlugins, ...normalPlugins, ...postPlugins];
-  for (const p of userPlugins) {
-    if (p.config) {
-      const res = await p.config(config, configEnv);
-      if (res) {
-        config = mergeConfig(config, res);
-      }
-    }
-  }
+  const userPlugins = rawUserPlugins; // [...prePlugins, ...normalPlugins, ...postPlugins];
+  // for (const p of userPlugins) {
+  //   if (p.config) {
+  //     const res = await p.config(config, configEnv);
+  //     if (res) {
+  //       config = mergeConfig(config, res);
+  //     }
+  //   }
+  // }
 
   // resolve root
   const resolvedRoot = normalizePath(
@@ -686,23 +690,23 @@ function normalizeSingleAlias({ find, replacement }: any): any {
   return { find, replacement };
 }
 
-export function sortUserPlugins(
-  plugins: (Plugin | Plugin[])[] | undefined
-): [Plugin[], Plugin[], Plugin[]] {
-  const prePlugins: Plugin[] = [];
-  const postPlugins: Plugin[] = [];
-  const normalPlugins: Plugin[] = [];
+// export function sortUserPlugins(
+//   plugins: (Plugin | Plugin[])[] | undefined
+// ): [Plugin[], Plugin[], Plugin[]] {
+//   const prePlugins: Plugin[] = [];
+//   const postPlugins: Plugin[] = [];
+//   const normalPlugins: Plugin[] = [];
 
-  if (plugins) {
-    plugins.flat().forEach(p => {
-      if (p.enforce === "pre") prePlugins.push(p);
-      else if (p.enforce === "post") postPlugins.push(p);
-      else normalPlugins.push(p);
-    });
-  }
+//   if (plugins) {
+//     plugins.flat().forEach(p => {
+//       if (p.enforce === "pre") prePlugins.push(p);
+//       else if (p.enforce === "post") postPlugins.push(p);
+//       else normalPlugins.push(p);
+//     });
+//   }
 
-  return [prePlugins, normalPlugins, postPlugins];
-}
+//   return [prePlugins, normalPlugins, postPlugins];
+// }
 
 export async function loadConfigFromFile(
   configEnv: ConfigEnv,

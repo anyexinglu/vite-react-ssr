@@ -17,7 +17,7 @@ import {
 } from "../utils";
 import { checkPublicFile } from "../plugins/asset";
 import { ssrTransform } from "../ssr/ssrTransform";
-import { injectSourcesContent } from "./sourcemap";
+// import { injectSourcesContent } from "./sourcemap";
 // import { isFileServingAllowed } from './middlewares/static'
 
 const debugLoad = createDebugger("vite:load");
@@ -175,10 +175,11 @@ export async function transformRequest(
   }
 
   if (map && mod.file) {
-    map = (typeof map === "string" ? JSON.parse(map) : map) as SourceMap;
-    if (map.mappings && !map.sourcesContent) {
-      await injectSourcesContent(map, mod.file);
-    }
+    // 暂时去掉 sourceMap
+    // map = (typeof map === "string" ? JSON.parse(map) : map) as SourceMap;
+    // if (map.mappings && !map.sourcesContent) {
+    //   await injectSourcesContent(map, mod.file);
+    // }
   }
 
   if (ssr) {

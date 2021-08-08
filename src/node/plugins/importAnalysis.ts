@@ -269,6 +269,7 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
         // check import.meta usage
         if (rawUrl === "import.meta") {
           const prop = source.slice(end, end + 4);
+          console.log("...prop", prop);
           if (prop === ".hot") {
             hasHMR = true;
             if (source.slice(end + 4, end + 11) === ".accept") {
@@ -283,8 +284,8 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
                 isSelfAccepting = true;
               }
             }
-          } else if (prop === ".env") {
-            hasEnv = true;
+            // } else if (prop === ".env") {
+            //   hasEnv = true;
           } else if (prop === ".glo" && source[end + 4] === "b") {
             // transform import.meta.glob()
             // e.g. `import.meta.glob('glob:./dir/*.js')`

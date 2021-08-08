@@ -1,5 +1,5 @@
-import MagicString from "magic-string";
-import { TransformResult } from "rollup";
+// import MagicString from "magic-string";
+// import { TransformResult } from "rollup";
 import { ResolvedConfig } from "../config";
 import { Plugin } from "../plugin";
 // import { isCSSRequest } from './css'
@@ -15,20 +15,20 @@ export function definePlugin(config: ResolvedConfig): Plugin {
 
   // during dev, import.meta properties are handled by importAnalysis plugin
   const importMetaKeys: Record<string, string> = {};
-  if (isBuild) {
-    const env: Record<string, any> = {
-      ...config.env,
-      SSR: !!config.build.ssr,
-    };
-    for (const key in env) {
-      importMetaKeys[`import.meta.env.${key}`] = JSON.stringify(env[key]);
-    }
-    Object.assign(importMetaKeys, {
-      "import.meta.env.": `({}).`,
-      "import.meta.env": JSON.stringify(config.env),
-      "import.meta.hot": `false`,
-    });
-  }
+  // if (isBuild) {
+  //   const env: Record<string, any> = {
+  //     ...config.env,
+  //     SSR: !!config.build.ssr,
+  //   };
+  //   for (const key in env) {
+  //     importMetaKeys[`import.meta.env.${key}`] = JSON.stringify(env[key]);
+  //   }
+  //   Object.assign(importMetaKeys, {
+  //     "import.meta.env.": `({}).`,
+  //     "import.meta.env": JSON.stringify(config.env),
+  //     "import.meta.hot": `false`,
+  //   });
+  // }
 
   const replacements: Record<string, string | undefined> = {
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || config.mode),
@@ -59,11 +59,11 @@ export function definePlugin(config: ResolvedConfig): Plugin {
   return {
     name: "vite:define",
     transform(code, id, ssr) {
-      if (!ssr && !isBuild) {
-        // for dev we inject actual global defines in the vite client to
-        // avoid the transform cost.
-        return;
-      }
+      // if (!ssr && !isBuild) {
+      //   // for dev we inject actual global defines in the vite client to
+      //   // avoid the transform cost.
+      //   return;
+      // }
 
       if (
         // exclude css and static assets for performance
@@ -80,27 +80,27 @@ export function definePlugin(config: ResolvedConfig): Plugin {
         });
       }
 
-      const s = new MagicString(code);
-      let hasReplaced = false;
-      let match;
+      // const s = new MagicString(code);
+      // let hasReplaced = false;
+      // let match;
 
-      while ((match = pattern.exec(code))) {
-        hasReplaced = true;
-        const start = match.index;
-        const end = start + match[0].length;
-        const replacement = "" + replacements[match[1]];
-        s.overwrite(start, end, replacement);
-      }
+      // while ((match = pattern.exec(code))) {
+      //   hasReplaced = true;
+      //   const start = match.index;
+      //   const end = start + match[0].length;
+      //   const replacement = "" + replacements[match[1]];
+      //   s.overwrite(start, end, replacement);
+      // }
 
-      if (!hasReplaced) {
-        return null;
-      }
+      // if (!hasReplaced) {
+      //   return null;
+      // }
 
-      const result: TransformResult = { code: s.toString() };
-      if (config.build.sourcemap) {
-        result.map = s.generateMap({ hires: true });
-      }
-      return result;
+      // const result: TransformResult = { code: s.toString() };
+      // if (config.build.sourcemap) {
+      //   result.map = s.generateMap({ hires: true });
+      // }
+      // return result;
     },
   };
 }

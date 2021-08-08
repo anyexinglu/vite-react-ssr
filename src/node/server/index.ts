@@ -15,7 +15,7 @@ import { transformMiddleware } from "./middlewares/transform";
 import { ModuleGraph, ModuleNode } from "./moduleGraph";
 import { Connect } from "../types/connect";
 import { createDebugger, ensureLeadingSlash } from "../utils";
-import { searchForWorkspaceRoot } from "./searchRoot";
+// import { searchForWorkspaceRoot } from "./searchRoot";
 import { CLIENT_DIR } from "../constants";
 
 // import { normalizePath } from "../utils";
@@ -637,7 +637,7 @@ export function resolveServerOptions(root: string, raw?: ServerOptions): any {
   let allowDirs = server.fs?.allow;
 
   if (!allowDirs) {
-    allowDirs = [searchForWorkspaceRoot(root)];
+    allowDirs = [root]; // [searchForWorkspaceRoot(root)]; // 效果一样 '/Users/yangxiayan/Documents/duoduo/vite/vite-ssr'
   }
 
   allowDirs = allowDirs.map(i => resolvedAllowDir(root, i));
