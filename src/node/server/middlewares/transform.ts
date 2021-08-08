@@ -120,16 +120,16 @@ export function transformMiddleware(
       }
 
       // warn explicit /public/ paths
-      if (url.startsWith("/public/")) {
-        logger.warn(
-          chalk.yellow(
-            `files in the public directory are served at the root path.\n` +
-              `Instead of ${chalk.cyan(url)}, use ${chalk.cyan(
-                url.replace(/^\/public\//, "/")
-              )}.`
-          )
-        );
-      }
+      // if (url.startsWith("/public/")) {
+      //   logger.warn(
+      //     chalk.yellow(
+      //       `files in the public directory are served at the root path.\n` +
+      //         `Instead of ${chalk.cyan(url)}, use ${chalk.cyan(
+      //           url.replace(/^\/public\//, "/")
+      //         )}.`
+      //     )
+      //   );
+      // }
 
       if (
         isJSRequest(url) ||

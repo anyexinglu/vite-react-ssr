@@ -14,6 +14,10 @@ import { createWebSocketServer, WebSocketServer } from "./ws";
 import { transformMiddleware } from "./middlewares/transform";
 import { ModuleGraph, ModuleNode } from "./moduleGraph";
 import { Connect } from "../types/connect";
+import { createDebugger, ensureLeadingSlash } from "../utils";
+import { searchForWorkspaceRoot } from "./searchRoot";
+import { CLIENT_DIR } from "../constants";
+
 // import { normalizePath } from "../utils";
 export function normalizePath(id: string): string {
   return path.posix.normalize(id);
@@ -622,28 +626,32 @@ function createServerCloseFn(server: any) {
     });
 }
 
+function resolvedAllowDir(root: string, dir: string): string {
+  return ensureLeadingSlash(normalizePath(path.resolve(root, dir)));
+}
+
 // export default createServer;
 export function resolveServerOptions(root: string, raw?: ServerOptions): any {
-  return {};
-  // const server = raw || {};
-  // let allowDirs = server.fs?.allow;
+  // return {};
+  const server = raw || {};
+  let allowDirs = server.fs?.allow;
 
-  // if (!allowDirs) {
-  //   allowDirs = [searchForWorkspaceRoot(root)];
-  // }
+  if (!allowDirs) {
+    allowDirs = [searchForWorkspaceRoot(root)];
+  }
 
-  // allowDirs = allowDirs.map(i => resolvedAllowDir(root, i));
+  allowDirs = allowDirs.map(i => resolvedAllowDir(root, i));
 
-  // // only push client dir when vite itself is outside-of-root
-  // const resolvedClientDir = resolvedAllowDir(root, CLIENT_DIR);
-  // if (!allowDirs.some(i => resolvedClientDir.startsWith(i))) {
-  //   allowDirs.push(resolvedClientDir);
-  // }
+  // only push client dir when vite itself is outside-of-root
+  const resolvedClientDir = resolvedAllowDir(root, CLIENT_DIR);
+  if (!allowDirs.some(i => resolvedClientDir.startsWith(i))) {
+    allowDirs.push(resolvedClientDir);
+  }
 
-  // server.fs = {
-  //   // TODO: make strict by default
-  //   strict: server.fs?.strict,
-  //   allow: allowDirs,
-  // };
-  // return server as ResolvedServerOptions;
+  server.fs = {
+    // TODO: make strict by default
+    strict: server.fs?.strict,
+    allow: allowDirs,
+  };
+  return server as ResolvedServerOptions;
 }

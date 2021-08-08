@@ -53,7 +53,7 @@ export async function createServer(
 
   console.log("...vite", vite.middlewares, vite);
   // // use vite's connect instance as middleware
-  app.use(vite.middlewares);
+  // app.use(vite.middlewares);
 
   app.use("*", async (req, res) => {
     try {
@@ -61,9 +61,9 @@ export async function createServer(
       console.log("...get url:", url);
 
       // always read fresh template in dev
-      // let template = fs.readFileSync(resolve("../index.html"), "utf-8");
-      // template = await vite.transformIndexHtml(url, template);
-      let template = fs.readFileSync(resolve("../template.html"), "utf-8");
+      let template = fs.readFileSync(resolve("../index.html"), "utf-8");
+      template = await vite.transformIndexHtml(url, template);
+      // let template = fs.readFileSync(resolve("../template.html"), "utf-8");
       let render = (await vite.ssrLoadModule("src/entry-server.jsx")).render;
 
       const context = {} as any;
