@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { ViteDevServer } from "..";
 import { cleanUrl, resolveFrom, unwrapId } from "../utils";
-import { ssrRewriteStacktrace } from "./ssrStacktrace";
+// import { ssrRewriteStacktrace } from "./ssrStacktrace";
 import {
   ssrExportAllKey,
   ssrModuleExportsKey,
@@ -141,7 +141,7 @@ async function instantiateModule(
       ssrExportAll
     );
   } catch (e) {
-    e.stack = ssrRewriteStacktrace(e.stack, moduleGraph);
+    // e.stack = ssrRewriteStacktrace(e.stack, moduleGraph);
     server.config.logger.error(
       `Error when evaluating SSR module ${url}:\n${e.stack}`,
       {

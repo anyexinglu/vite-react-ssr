@@ -9,7 +9,7 @@ import {
   TransformResult,
 } from "rollup";
 import { ServerHook } from "./server";
-import { IndexHtmlTransform } from "./plugins/html";
+// import { IndexHtmlTransform } from "./plugins/html";
 import { ModuleNode } from "./server/moduleGraph";
 import { ConfigEnv, ResolvedConfig } from ".";
 import { HmrContext } from "./server/hmr";
@@ -94,7 +94,7 @@ export interface Plugin extends RollupPlugin {
    * transform. If you need to apply the transform before vite, use an object:
    * `{ enforce: 'pre', transform: hook }`
    */
-  transformIndexHtml?: IndexHtmlTransform;
+  transformIndexHtml?: any;
   /**
    * Perform custom handling of HMR updates.
    * The handler receives a context containing changed filename, timestamp, a

@@ -41,17 +41,16 @@ export type {
 //   ResolverObject,
 //   Alias,
 // } from "./types/alias";
-export type {
-  IndexHtmlTransform,
-  IndexHtmlTransformHook,
-  IndexHtmlTransformContext,
-  IndexHtmlTransformResult,
-  HtmlTagDescriptor,
-} from "./plugins/html";
+// export type {
+//   IndexHtmlTransform,
+//   IndexHtmlTransformHook,
+//   IndexHtmlTransformContext,
+//   IndexHtmlTransformResult,
+//   HtmlTagDescriptor,
+// } from "./plugins/html";
 // export type { CSSOptions, CSSModulesOptions } from "./plugins/css";
 export type { JsonOptions } from "./plugins/json";
 export type { ESBuildOptions, ESBuildTransformResult } from "./plugins/esbuild";
-export type { Manifest, ManifestChunk } from "./plugins/manifest";
 export type {
   PackageData,
   ResolveOptions,

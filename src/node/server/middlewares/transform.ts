@@ -15,7 +15,7 @@ import {
 } from "../../utils";
 import { send } from "../send";
 import { transformRequest } from "../transformRequest";
-import { isHTMLProxy } from "../../plugins/html";
+// import { isHTMLProxy } from "../../plugins/html";
 import chalk from "chalk";
 import {
   CLIENT_PUBLIC_PATH,
@@ -133,9 +133,10 @@ export function transformMiddleware(
 
       if (
         isJSRequest(url) ||
-        isImportRequest(url) ||
+        isImportRequest(url)
+        //  ||
         // isCSSRequest(url) ||
-        isHTMLProxy(url)
+        // isHTMLProxy(url)
       ) {
         // strip ?import
         url = removeImportQuery(url);
