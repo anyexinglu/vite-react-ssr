@@ -74613,87 +74613,87 @@ function parseWorkerRequest(id) {
     return qs__default.parse(search.slice(1));
 }
 const WorkerFileId = 'worker_file';
-function webWorkerPlugin(config) {
-    const isBuild = config.command === 'build';
-    return {
-        name: 'vite:worker',
-        load(id) {
-            var _a;
-            if (isBuild) {
-                const parsedQuery = parseWorkerRequest(id);
-                if (parsedQuery &&
-                    ((_a = parsedQuery.worker) !== null && _a !== void 0 ? _a : parsedQuery.sharedworker) != null) {
-                    return '';
-                }
-            }
-        },
-        async transform(_, id) {
-            var _a;
-            const query = parseWorkerRequest(id);
-            if (query && query[WorkerFileId] != null) {
-                return {
-                    code: `import '${ENV_PUBLIC_PATH}'\n` + _
-                };
-            }
-            if (query == null ||
-                (query && ((_a = query.worker) !== null && _a !== void 0 ? _a : query.sharedworker) == null)) {
-                return;
-            }
-            let url;
-            if (isBuild) {
-                // bundle the file as entry to support imports
-                const rollup = require('rollup');
-                const bundle = await rollup.rollup({
-                    input: cleanUrl(id),
-                    plugins: await resolvePlugins({ ...config }, [], [], [])
-                });
-                let code;
-                try {
-                    const { output } = await bundle.generate({
-                        format: 'iife',
-                        sourcemap: config.build.sourcemap
-                    });
-                    code = output[0].code;
-                }
-                finally {
-                    await bundle.close();
-                }
-                const content = Buffer.from(code);
-                if (query.inline != null) {
-                    // inline as blob data url
-                    return `const blob = new Blob([atob(\"${content.toString('base64')}\")], { type: 'text/javascript;charset=utf-8' });
-            export default function WorkerWrapper() {
-              const objURL = (window.URL || window.webkitURL).createObjectURL(blob);
-              try {
-                return new Worker(objURL);
-              } finally {
-                (window.URL || window.webkitURL).revokeObjectURL(objURL);
-              }
-            }`;
-                }
-                else {
-                    const basename = path__default.parse(cleanUrl(id)).name;
-                    const contentHash = getAssetHash(content);
-                    const fileName = path__default.posix.join(config.build.assetsDir, `${basename}.${contentHash}.js`);
-                    url = `__VITE_ASSET__${this.emitFile({
-                        fileName,
-                        type: 'asset',
-                        source: code
-                    })}__`;
-                }
-            }
-            else {
-                url = await fileToUrl(cleanUrl(id), config, this);
-                url = injectQuery(url, WorkerFileId);
-            }
-            const workerConstructor = query.sharedworker != null ? 'SharedWorker' : 'Worker';
-            const workerOptions = { type: 'module' };
-            return `export default function WorkerWrapper() {
-        return new ${workerConstructor}(${JSON.stringify(url)}, ${JSON.stringify(workerOptions, null, 2)})
-      }`;
-        }
-    };
-}
+// function webWorkerPlugin(config) {
+//     const isBuild = config.command === 'build';
+//     return {
+//         name: 'vite:worker',
+//         load(id) {
+//             var _a;
+//             if (isBuild) {
+//                 const parsedQuery = parseWorkerRequest(id);
+//                 if (parsedQuery &&
+//                     ((_a = parsedQuery.worker) !== null && _a !== void 0 ? _a : parsedQuery.sharedworker) != null) {
+//                     return '';
+//                 }
+//             }
+//         },
+//         async transform(_, id) {
+//             var _a;
+//             const query = parseWorkerRequest(id);
+//             if (query && query[WorkerFileId] != null) {
+//                 return {
+//                     code: `import '${ENV_PUBLIC_PATH}'\n` + _
+//                 };
+//             }
+//             if (query == null ||
+//                 (query && ((_a = query.worker) !== null && _a !== void 0 ? _a : query.sharedworker) == null)) {
+//                 return;
+//             }
+//             let url;
+//             if (isBuild) {
+//                 // bundle the file as entry to support imports
+//                 const rollup = require('rollup');
+//                 const bundle = await rollup.rollup({
+//                     input: cleanUrl(id),
+//                     plugins: await resolvePlugins({ ...config }, [], [], [])
+//                 });
+//                 let code;
+//                 try {
+//                     const { output } = await bundle.generate({
+//                         format: 'iife',
+//                         sourcemap: config.build.sourcemap
+//                     });
+//                     code = output[0].code;
+//                 }
+//                 finally {
+//                     await bundle.close();
+//                 }
+//                 const content = Buffer.from(code);
+//                 if (query.inline != null) {
+//                     // inline as blob data url
+//                     return `const blob = new Blob([atob(\"${content.toString('base64')}\")], { type: 'text/javascript;charset=utf-8' });
+//             export default function WorkerWrapper() {
+//               const objURL = (window.URL || window.webkitURL).createObjectURL(blob);
+//               try {
+//                 return new Worker(objURL);
+//               } finally {
+//                 (window.URL || window.webkitURL).revokeObjectURL(objURL);
+//               }
+//             }`;
+//                 }
+//                 else {
+//                     const basename = path__default.parse(cleanUrl(id)).name;
+//                     const contentHash = getAssetHash(content);
+//                     const fileName = path__default.posix.join(config.build.assetsDir, `${basename}.${contentHash}.js`);
+//                     url = `__VITE_ASSET__${this.emitFile({
+//                         fileName,
+//                         type: 'asset',
+//                         source: code
+//                     })}__`;
+//                 }
+//             }
+//             else {
+//                 url = await fileToUrl(cleanUrl(id), config, this);
+//                 url = injectQuery(url, WorkerFileId);
+//             }
+//             const workerConstructor = query.sharedworker != null ? 'SharedWorker' : 'Worker';
+//             const workerOptions = { type: 'module' };
+//             return `export default function WorkerWrapper() {
+//         return new ${workerConstructor}(${JSON.stringify(url)}, ${JSON.stringify(workerOptions, null, 2)})
+//       }`;
+//         }
+//     };
+// }
 
 /**
  * A plugin to avoid an aliased AND optimized dep from being aliased in src
@@ -74722,20 +74722,20 @@ function definePlugin(config) {
     }
     // during dev, import.meta properties are handled by importAnalysis plugin
     const importMetaKeys = {};
-    if (isBuild) {
-        const env = {
-            ...config.env,
-            SSR: !!config.build.ssr
-        };
-        for (const key in env) {
-            importMetaKeys[`import.meta.env.${key}`] = JSON.stringify(env[key]);
-        }
-        Object.assign(importMetaKeys, {
-            'import.meta.env.': `({}).`,
-            'import.meta.env': JSON.stringify(config.env),
-            'import.meta.hot': `false`
-        });
-    }
+    // if (isBuild) {
+    //     const env = {
+    //         ...config.env,
+    //         SSR: !!config.build.ssr
+    //     };
+    //     for (const key in env) {
+    //         importMetaKeys[`import.meta.env.${key}`] = JSON.stringify(env[key]);
+    //     }
+    //     Object.assign(importMetaKeys, {
+    //         'import.meta.env.': `({}).`,
+    //         'import.meta.env': JSON.stringify(config.env),
+    //         'import.meta.hot': `false`
+    //     });
+    // }
     const replacements = {
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || config.mode),
         'global.process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || config.mode),
@@ -74798,11 +74798,11 @@ function definePlugin(config) {
 async function resolvePlugins(config, prePlugins, normalPlugins, postPlugins) {
     var _a;
     const isBuild = config.command === 'build';
-    const buildPlugins = isBuild
-        ? (await Promise.resolve().then(function () { return build$1; })).resolveBuildPlugins(config)
-        : { pre: [], post: [] };
+    // const buildPlugins = isBuild
+    //     ? (await Promise.resolve().then(function () { return build$1; })).resolveBuildPlugins(config)
+    //     : { pre: [], post: [] };
     
-    console.log('...buildPlugins', buildPlugins)
+    // console.log('...buildPlugins', buildPlugins)
     return [
         // isBuild ? null : preAliasPlugin(),
         alias({ entries: config.resolve.alias }),

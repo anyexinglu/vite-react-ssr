@@ -12,6 +12,8 @@ import {
   removeTimestampQuery,
   timeFrom,
   ensureWatchedFile,
+  ensureLeadingSlash,
+  normalizePath,
 } from "../utils";
 import { checkPublicFile } from "../plugins/asset";
 import { ssrTransform } from "../ssr/ssrTransform";
@@ -22,6 +24,35 @@ const debugLoad = createDebugger("vite:load");
 const debugTransform = createDebugger("vite:transform");
 const debugCache = createDebugger("vite:cache");
 const isDebug = !!process.env.DEBUG;
+
+export function isFileServingAllowed(
+  url: string,
+  server: ViteDevServer
+): boolean {
+  // explicitly disabled
+  if (server.config.server.fs.strict === false) return true;
+
+  const file = ensureLeadingSlash(normalizePath(cleanUrl(url)));
+
+  if (server.moduleGraph.safeModulesPath.has(file)) return true;
+
+  if (server.config.server.fs.allow.some(i => file.startsWith(i + "/")))
+    return true;
+
+  if (!server.config.server.fs.strict) {
+    server.config.logger.warnOnce(
+      `Unrestricted file system access to "${url}"`
+    );
+    server.config.logger.warnOnce(
+      `For security concerns, accessing files outside of serving allow list will ` +
+        `be restricted by default in the future version of Vite. ` +
+        `Refer to https://vitejs.dev/config/#server-fs-allow for more details.`
+    );
+    return true;
+  }
+
+  return false;
+}
 
 export interface TransformResult {
   code: string;
@@ -77,8 +108,7 @@ export async function transformRequest(
     // as string
     // only try the fallback if access is allowed, skip for out of root url
     // like /service-worker.js or /api/users
-    if (options.ssr) {
-      // || isFileServingAllowed(file, server)) {
+    if (options.ssr || isFileServingAllowed(file, server)) {
       try {
         code = await fs.readFile(file, "utf-8");
         isDebug && debugLoad(`${timeFrom(loadStart)} [fs] ${prettyUrl}`);

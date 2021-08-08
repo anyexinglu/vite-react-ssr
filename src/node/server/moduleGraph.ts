@@ -33,6 +33,7 @@ export class ModuleNode {
 
   constructor(url: string) {
     this.url = url;
+    this.type = "js"; // 忽略 css
     // this.type = isDirectCSSRequest(url) ? 'css' : 'js'
   }
 }

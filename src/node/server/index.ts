@@ -508,7 +508,7 @@ async function startServer(
   }
 
   const options = server.config.server;
-  let port = inlinePort || options.port || 3000;
+  let port = inlinePort || options.port || 4100;
   const hostname = resolveHostname(options.host);
 
   const protocol = options.https ? "https" : "http";
