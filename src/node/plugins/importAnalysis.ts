@@ -214,40 +214,6 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
             VALID_ID_PREFIX + resolved.id.replace("\0", NULL_BYTE_PLACEHOLDER);
         }
 
-        // make the URL browser-valid if not SSR
-        // if (!ssr) {
-        //   // mark non-js/css imports with `?import`
-        //   url = markExplicitImport(url);
-
-        //   // for relative js/css imports, inherit importer's version query
-        //   // do not do this for unknown type imports, otherwise the appended
-        //   // query can break 3rd party plugin's extension checks.
-        //   if (isRelative && !/[\?&]import=?\b/.test(url)) {
-        //     const versionMatch = importer.match(DEP_VERSION_RE);
-        //     if (versionMatch) {
-        //       url = injectQuery(url, versionMatch[1]);
-        //     }
-        //   }
-
-        //   // check if the dep has been hmr updated. If yes, we need to attach
-        //   // its last updated timestamp to force the browser to fetch the most
-        //   // up-to-date version of this module.
-        //   try {
-        //     const depModule = await moduleGraph.ensureEntryFromUrl(url);
-        //     if (depModule.lastHMRTimestamp > 0) {
-        //       url = injectQuery(url, `t=${depModule.lastHMRTimestamp}`);
-        //     }
-        //   } catch (e) {
-        //     // it's possible that the dep fails to resolve (non-existent import)
-        //     // attach location to the missing import
-        //     e.pos = pos;
-        //     throw e;
-        //   }
-
-        //   // prepend base (dev base is guaranteed to have ending slash)
-        //   url = base + url.replace(/^\//, "");
-        // }
-
         return [url, resolved.id];
       };
 
@@ -265,6 +231,10 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
         } = imports[index];
 
         const rawUrl = source.slice(start, end);
+
+        if (importer?.includes("entry-client") && rawUrl === "react") {
+          debugger;
+        }
 
         // check import.meta usage
         if (rawUrl === "import.meta") {

@@ -130,6 +130,12 @@ export async function optimizeDeps(
     if (prevData && prevData.hash === data.hash) {
       log("Hash is consistent. Skipping. Use --force to override.");
       return prevData;
+    } else {
+      console.log(
+        "prevData.hash not equal data.hash",
+        prevData.hash,
+        data.hash
+      );
     }
   }
 

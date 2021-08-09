@@ -85,23 +85,26 @@ export function resolvePlugin(baseOptions: InternalResolveOptions): Plugin {
     },
 
     resolveId(id, importer, resolveOpts, ssr) {
-      if (id.startsWith(browserExternalId)) {
-        return id;
-      }
+      // if (id === "react" && importer.includes("entry-client")) {
+      //   debugger;
+      // }
+      // if (id.startsWith(browserExternalId)) {
+      //   return id;
+      // }
 
-      // fast path for commonjs proxy modules
-      if (/\?commonjs/.test(id) || id === "commonjsHelpers.js") {
-        return;
-      }
+      // // fast path for commonjs proxy modules
+      // if (/\?commonjs/.test(id) || id === "commonjsHelpers.js") {
+      //   return;
+      // }
 
       const targetWeb = !ssr || ssrTarget === "webworker";
 
       // this is passed by @rollup/plugin-commonjs
-      const isRequire =
-        resolveOpts &&
-        resolveOpts.custom &&
-        resolveOpts.custom["node-resolve"] &&
-        resolveOpts.custom["node-resolve"].isRequire;
+      const isRequire = false;
+      // resolveOpts &&
+      // resolveOpts.custom &&
+      // resolveOpts.custom["node-resolve"] &&
+      // resolveOpts.custom["node-resolve"].isRequire;
 
       const options = isRequire ? requireOptions : baseOptions;
 
@@ -109,6 +112,7 @@ export function resolvePlugin(baseOptions: InternalResolveOptions): Plugin {
 
       // explicit fs paths that starts with /@fs/*
       if (asSrc && id.startsWith(FS_PREFIX)) {
+        console.log("..inner FS_PREFIX");
         const fsPath = fsPathFromId(id);
         res = tryFsResolve(fsPath, options);
         isDebug && debug(`[@fs] ${chalk.cyan(id)} -> ${chalk.dim(res)}`);
@@ -266,6 +270,7 @@ function tryFsResolve(
   tryIndex = true,
   targetWeb = true
 ): string | undefined {
+  // console.log("..inner tryFsResolve");
   let file = fsPath;
   let postfix = "";
 
