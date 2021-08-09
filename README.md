@@ -26,14 +26,6 @@ Vite + React + SSR + TS
 yarn && yarn dev
 然后打开 http://localhost:4100/
 
-## FAQ
-
-1、SSR 一开始运行的是 "src/entry-server.jsx"，那什么时候运行 "src/entry-client.jsx" 呢
-
-2、ESBuild 发挥了什么作用
-
-3、
-
 ## 合理避坑
 
 yarn dev 启动过程中, yarn / yarn add 可能遇到报错:
