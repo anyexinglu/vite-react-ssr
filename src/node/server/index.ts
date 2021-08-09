@@ -251,16 +251,6 @@ export interface ViteDevServer {
    * @internal
    */
   _isRunningOptimizer: boolean;
-  /**
-   * @internal
-   */
-  _registerMissingImport:
-    | ((id: string, resolved: string, ssr: boolean | undefined) => void)
-    | null;
-  /**
-   * @internal
-   */
-  _pendingReload: Promise<void> | null;
 }
 
 export async function createServer(
@@ -335,8 +325,6 @@ export async function createServer(
     _ssrExternals: null,
     _globImporters: {},
     _isRunningOptimizer: false,
-    _registerMissingImport: null,
-    _pendingReload: null,
   };
 
   exitProcess = async () => {
@@ -398,13 +386,11 @@ export async function createServer(
 
   // 优化依赖，提前将依赖编译到 node_modules 的 .vite 中
   const runOptimize = async () => {
-    if (config.cacheDir) {
-      server._isRunningOptimizer = true;
-      try {
-        server._optimizeDepsMetadata = await optimizeDeps(config as any);
-      } finally {
-        server._isRunningOptimizer = false;
-      }
+    server._isRunningOptimizer = true;
+    try {
+      server._optimizeDepsMetadata = await optimizeDeps(config as any);
+    } finally {
+      server._isRunningOptimizer = false;
     }
   };
 

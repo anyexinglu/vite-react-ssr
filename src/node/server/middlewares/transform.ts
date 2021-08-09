@@ -64,29 +64,6 @@ export function transformMiddleware(
       return next();
     }
 
-    if (
-      server._pendingReload &&
-      // always allow vite client requests so that it can trigger page reload
-      !req.url?.startsWith(CLIENT_PUBLIC_PATH) &&
-      !req.url?.includes("vite/dist/client")
-    ) {
-      // missing dep pending reload, hold request until reload happens
-      server._pendingReload.then(() =>
-        // If the refresh has not happened after timeout, Vite considers
-        // something unexpected has happened. In this case, Vite
-        // returns an empty response that will error.
-        setTimeout(() => {
-          // status code request timeout
-          res.statusCode = 408;
-          res.end(
-            `<h1>[vite] Something unexpected happened while optimizing "${req.url}"<h1>` +
-              `<p>The current page should have reloaded by now</p>`
-          );
-        }, NEW_DEPENDENCY_BUILD_TIMEOUT)
-      );
-      return;
-    }
-
     let url;
     try {
       url = removeTimestampQuery(req.url!).replace(NULL_BYTE_PLACEHOLDER, "\0");
