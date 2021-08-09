@@ -5,19 +5,16 @@ import { ResolvedConfig } from "../config";
 import chalk from "chalk";
 import MagicString from "magic-string";
 import { init, parse as parseImports, ImportSpecifier } from "es-module-lexer";
-// import { isCSSRequest, isDirectCSSRequest } from "./css";
 import {
   isBuiltin,
   cleanUrl,
   createDebugger,
-  generateCodeFrame,
   injectQuery,
   isDataUrl,
   isExternalUrl,
   isJSRequest,
   prettifyUrl,
   timeFrom,
-  normalizePath,
 } from "../utils";
 import {
   debugHmr,
@@ -26,9 +23,7 @@ import {
 } from "../server/hmr";
 import {
   FS_PREFIX,
-  CLIENT_DIR,
   CLIENT_PUBLIC_PATH,
-  DEP_VERSION_RE,
   VALID_ID_PREFIX,
   NULL_BYTE_PLACEHOLDER,
 } from "../constants";
@@ -42,9 +37,6 @@ import { shouldExternalizeForSSR } from "../ssr/ssrExternal";
 
 const isDebug = !!process.env.DEBUG;
 const debugRewrite = createDebugger("vite:rewrite");
-
-const clientDir = normalizePath(CLIENT_DIR);
-
 const skipRE = /\.(map|json)$/;
 const canSkip = (id: string) => skipRE.test(id); // || isDirectCSSRequest(id)
 
@@ -232,10 +224,6 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
 
         const rawUrl = source.slice(start, end);
 
-        if (importer?.includes("entry-client") && rawUrl === "react") {
-          debugger;
-        }
-
         // check import.meta usage
         if (rawUrl === "import.meta") {
           const prop = source.slice(end, end + 4);
@@ -254,8 +242,6 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
                 isSelfAccepting = true;
               }
             }
-            // } else if (prop === ".env") {
-            //   hasEnv = true;
           } else if (prop === ".glo" && source[end + 4] === "b") {
             // transform import.meta.glob()
             // e.g. `import.meta.glob('glob:./dir/*.js')`
@@ -311,20 +297,6 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
             continue;
           }
 
-          // warn imports to non-asset /public files
-          // if (
-          //   specifier.startsWith("/") &&
-          //   !config.assetsInclude(cleanUrl(specifier)) &&
-          //   !specifier.endsWith(".json") &&
-          //   checkPublicFile(specifier, config)
-          // ) {
-          //   throw new Error(
-          //     `Cannot import non-asset file ${specifier} which is inside /public.` +
-          //       `JS/CSS files inside /public are copied as-is on build and ` +
-          //       `can only be referenced via <script src> or <link href> in html.`
-          //   );
-          // }
-
           // normalize
           const [normalizedUrl, resolvedId] = await normalizeUrl(
             specifier,
@@ -353,6 +325,7 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
               } else {
                 const exp = source.slice(expStart, expEnd);
                 const rewritten = transformCjsImport(exp, url, rawUrl, index);
+                // console.log("...transformCjsImport", url, rewritten);
                 if (rewritten) {
                   str().overwrite(expStart, expEnd, rewritten);
                 } else {
@@ -368,58 +341,7 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
           // record for HMR import chain analysis
           // make sure to normalize away base
           importedUrls.add(url.replace(base, "/"));
-        } else if (!importer.startsWith(clientDir) && !ssr) {
-          // check @vite-ignore which suppresses dynamic import warning
-          const hasViteIgnore = /\/\*\s*@vite-ignore\s*\*\//.test(rawUrl);
-
-          const url = rawUrl
-            .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "")
-            .trim();
-          if (!hasViteIgnore && !isSupportedDynamicImport(url)) {
-            this.warn(
-              `\n` +
-                chalk.cyan(importerModule.file) +
-                `\n` +
-                generateCodeFrame(source, start) +
-                `\nThe above dynamic import cannot be analyzed by vite.\n` +
-                `See ${chalk.blue(
-                  `https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations`
-                )} ` +
-                `for supported dynamic import formats. ` +
-                `If this is intended to be left as-is, you can use the ` +
-                `/* @vite-ignore */ comment inside the import() call to suppress this warning.\n`
-            );
-          }
-          if (
-            !/^('.*'|".*"|`.*`)$/.test(url) ||
-            isExplicitImportRequired(url.slice(1, -1))
-          ) {
-            needQueryInjectHelper = true;
-            str().overwrite(
-              start,
-              end,
-              `__vite__injectQuery(${url}, 'import')`
-            );
-          }
         }
-      }
-
-      if (hasEnv) {
-        // inject import.meta.env
-        let env = `import.meta.env = ${JSON.stringify({
-          ...config.env,
-          SSR: !!ssr,
-        })};`;
-        // account for user env defines
-        for (const key in config.define) {
-          if (key.startsWith(`import.meta.env.`)) {
-            const val = config.define[key];
-            env += `${key} = ${
-              typeof val === "string" ? val : JSON.stringify(val)
-            };`;
-          }
-        }
-        str().prepend(env);
       }
 
       if (hasHMR && !ssr) {
@@ -470,7 +392,6 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
       if (hasHMR && prunedImports) {
         handlePrunedModules(prunedImports, server);
       }
-      // }
 
       if (s) {
         return s.toString();
@@ -479,27 +400,6 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
       }
     },
   };
-}
-
-/**
- * https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations
- * This is probably less accurate but is much cheaper than a full AST parse.
- */
-function isSupportedDynamicImport(url: string) {
-  url = url.trim().slice(1, -1);
-  // must be relative
-  if (!url.startsWith("./") && !url.startsWith("../")) {
-    return false;
-  }
-  // must have extension
-  if (!path.extname(url)) {
-    return false;
-  }
-  // must be more specific if importing from same dir
-  if (url.startsWith("./${") && url.indexOf("/") === url.lastIndexOf("/")) {
-    return false;
-  }
-  return true;
 }
 
 type ImportNameSpecifier = { importedName: string; localName: string };

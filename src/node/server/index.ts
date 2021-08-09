@@ -13,7 +13,6 @@ export function normalizePath(id: string): string {
 }
 import { handleHMRUpdate } from "./hmr";
 import { transformRequest } from "./transformRequest";
-import { transformWithEsbuild } from "../plugins/esbuild";
 import { optimizeDeps } from "../optimizer";
 import { ssrLoadModule } from "../ssr/ssrModuleLoader";
 import { resolveSSRExternal } from "../ssr/ssrExternal";
@@ -200,16 +199,6 @@ export interface ViteDevServer {
   //   originalUrl?: string
   // ): Promise<string>;
   /**
-   * Util for transforming a file with esbuild.
-   * Can be useful for certain plugins.
-   */
-  transformWithEsbuild(
-    code: string,
-    filename: string,
-    options?: any, // EsbuildTransformOptions,
-    inMap?: object
-  ): Promise<any>;
-  /**
    * Load a given URL as an instantiated module for SSR.
    */
   ssrLoadModule(url: string): Promise<Record<string, any>>;
@@ -295,7 +284,6 @@ export async function createServer(
     pluginContainer: container,
     ws,
     moduleGraph,
-    transformWithEsbuild,
     transformRequest(url, options) {
       return transformRequest(url, server, options);
     },

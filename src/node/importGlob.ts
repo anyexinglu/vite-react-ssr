@@ -25,7 +25,6 @@ export async function transformImportGlob(
   pattern: string;
   base: string;
 }> {
-  console.log("...transformImportGlob");
   const isEager = source.slice(pos, pos + 21) === "import.meta.globEager";
   const isEagerDefault =
     isEager && source.slice(pos + 21, pos + 28) === "Default";

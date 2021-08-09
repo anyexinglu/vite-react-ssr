@@ -85,27 +85,10 @@ export function resolvePlugin(baseOptions: InternalResolveOptions): Plugin {
     },
 
     resolveId(id, importer, resolveOpts, ssr) {
-      // if (id === "react" && importer.includes("entry-client")) {
-      //   debugger;
-      // }
-      // if (id.startsWith(browserExternalId)) {
-      //   return id;
-      // }
-
-      // // fast path for commonjs proxy modules
-      // if (/\?commonjs/.test(id) || id === "commonjsHelpers.js") {
-      //   return;
-      // }
-
       const targetWeb = !ssr || ssrTarget === "webworker";
 
       // this is passed by @rollup/plugin-commonjs
       const isRequire = false;
-      // resolveOpts &&
-      // resolveOpts.custom &&
-      // resolveOpts.custom["node-resolve"] &&
-      // resolveOpts.custom["node-resolve"].isRequire;
-
       const options = isRequire ? requireOptions : baseOptions;
 
       let res;

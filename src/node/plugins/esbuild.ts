@@ -1,17 +1,9 @@
 import path from "path";
-import chalk from "chalk";
 import { Plugin } from "../plugin";
-import {
-  transform,
-  Message,
-  Loader,
-  TransformOptions,
-  TransformResult,
-} from "esbuild";
-import { cleanUrl, createDebugger, generateCodeFrame } from "../utils";
+import { transform, Loader, TransformOptions, TransformResult } from "esbuild";
+import { cleanUrl, createDebugger } from "../utils";
 import { RawSourceMap } from "@ampproject/remapping/dist/types/types";
 import { SourceMap } from "rollup";
-import { ResolvedConfig } from "..";
 import { createFilter } from "@rollup/pluginutils";
 import { combineSourcemaps } from "../utils";
 
@@ -27,7 +19,7 @@ export type ESBuildTransformResult = Omit<TransformResult, "map"> & {
   map: SourceMap;
 };
 
-export async function transformWithEsbuild(
+async function transformWithEsbuild(
   code: string,
   filename: string,
   options?: TransformOptions,
@@ -78,10 +70,6 @@ export async function transformWithEsbuild(
     debug(`esbuild error with options used: `, resolvedOptions);
     // patch error information
     if (e.errors) {
-      e.frame = "";
-      e.errors.forEach((m: Message) => {
-        e.frame += `\n` + prettifyMessage(m, code);
-      });
       e.loc = e.errors[0].location;
     }
     throw e;
@@ -101,7 +89,7 @@ export function esbuildPlugin(options: ESBuildOptions = {}): Plugin {
         const result = await transformWithEsbuild(code, id, options);
         if (result.warnings.length) {
           result.warnings.forEach(m => {
-            this.warn(prettifyMessage(m, code));
+            console.warn(m, code);
           });
         }
         if (options.jsxInject && /\.(?:j|t)sx\b/.test(id)) {
@@ -114,42 +102,4 @@ export function esbuildPlugin(options: ESBuildOptions = {}): Plugin {
       }
     },
   };
-}
-
-export const buildEsbuildPlugin = (config: ResolvedConfig): Plugin => {
-  return {
-    name: "vite:esbuild-transpile",
-    async renderChunk(code, chunk, opts) {
-      // @ts-ignore injected by @vitejs/plugin-legacy
-      if (opts.__vite_skip_esbuild__) {
-        return null;
-      }
-
-      const target = config.build.target;
-      const minify = config.build.minify === "esbuild";
-      if ((!target || target === "esnext") && !minify) {
-        return null;
-      }
-      return transformWithEsbuild(code, chunk.fileName, {
-        target: target || undefined,
-        minify,
-      });
-    },
-  };
-};
-
-function prettifyMessage(m: Message, code: string): string {
-  let res = chalk.yellow(m.text);
-  if (m.location) {
-    const lines = code.split(/\r?\n/g);
-    const line = Number(m.location.line);
-    const column = Number(m.location.column);
-    const offset =
-      lines
-        .slice(0, line - 1)
-        .map(l => l.length)
-        .reduce((total, l) => total + l + 1, 0) + column;
-    res += `\n` + generateCodeFrame(code, offset, offset + 1);
-  }
-  return res + `\n`;
 }

@@ -252,9 +252,7 @@ export async function resolveConfig(
   // const [prePlugins, normalPlugins, postPlugins] =
   //   sortUserPlugins(rawUserPlugins);
 
-  const prePlugins = rawUserPlugins,
-    normalPlugins = [],
-    postPlugins = [];
+  const prePlugins = rawUserPlugins;
   // run config hooks
   const userPlugins = rawUserPlugins;
   // resolve root
@@ -353,6 +351,7 @@ export async function resolveConfig(
           typeof publicDir === "string" ? publicDir : "public"
         )
       : "";
+  console.log("...resolvedPublicDir", resolvedPublicDir);
 
   const resolved: ResolvedConfig = {
     ...config,
@@ -421,12 +420,7 @@ export async function resolveConfig(
     },
   };
 
-  (resolved.plugins as Plugin[]) = await resolvePlugins(
-    resolved,
-    prePlugins,
-    normalPlugins,
-    postPlugins
-  );
+  (resolved.plugins as Plugin[]) = await resolvePlugins(resolved, prePlugins);
 
   // call configResolved hooks
   await Promise.all(userPlugins.map(p => p.configResolved?.(resolved)));
@@ -512,24 +506,6 @@ function normalizeSingleAlias({ find, replacement }: any): any {
   }
   return { find, replacement };
 }
-
-// export function sortUserPlugins(
-//   plugins: (Plugin | Plugin[])[] | undefined
-// ): [Plugin[], Plugin[], Plugin[]] {
-//   const prePlugins: Plugin[] = [];
-//   const postPlugins: Plugin[] = [];
-//   const normalPlugins: Plugin[] = [];
-
-//   if (plugins) {
-//     plugins.flat().forEach(p => {
-//       if (p.enforce === "pre") prePlugins.push(p);
-//       else if (p.enforce === "post") postPlugins.push(p);
-//       else normalPlugins.push(p);
-//     });
-//   }
-
-//   return [prePlugins, normalPlugins, postPlugins];
-// }
 
 export async function loadConfigFromFile(
   configEnv: ConfigEnv,

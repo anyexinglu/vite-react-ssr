@@ -4,7 +4,6 @@ import { Connect } from "../../types/connect";
 import {
   cleanUrl,
   createDebugger,
-  injectQuery,
   isImportRequest,
   isJSRequest,
   normalizePath,
@@ -15,20 +14,7 @@ import {
 } from "../../utils";
 import { send } from "../send";
 import { transformRequest } from "../transformRequest";
-// import { isHTMLProxy } from "../../plugins/html";
-import chalk from "chalk";
-import {
-  CLIENT_PUBLIC_PATH,
-  DEP_VERSION_RE,
-  NULL_BYTE_PLACEHOLDER,
-} from "../../constants";
-// import { isCSSRequest, isDirectCSSRequest } from "../../plugins/css";
-
-/**
- * Time (ms) Vite has to full-reload the page before returning
- * an empty response.
- */
-const NEW_DEPENDENCY_BUILD_TIMEOUT = 1000;
+import { DEP_VERSION_RE, NULL_BYTE_PLACEHOLDER } from "../../constants";
 
 const debugCache = createDebugger("vite:cache");
 const isDebug = !!process.env.DEBUG;
@@ -96,36 +82,12 @@ export function transformMiddleware(
         }
       }
 
-      // warn explicit /public/ paths
-      // if (url.startsWith("/public/")) {
-      //   logger.warn(
-      //     chalk.yellow(
-      //       `files in the public directory are served at the root path.\n` +
-      //         `Instead of ${chalk.cyan(url)}, use ${chalk.cyan(
-      //           url.replace(/^\/public\//, "/")
-      //         )}.`
-      //     )
-      //   );
-      // }
-
-      if (
-        isJSRequest(url) ||
-        isImportRequest(url)
-        //  ||
-        // isCSSRequest(url) ||
-        // isHTMLProxy(url)
-      ) {
+      if (isJSRequest(url) || isImportRequest(url)) {
         // strip ?import
         url = removeImportQuery(url);
         // Strip valid id prefix. This is prepended to resolved Ids that are
         // not valid browser import specifiers by the importAnalysis plugin.
         url = unwrapId(url);
-
-        // for CSS, we need to differentiate between normal CSS requests and
-        // imports
-        // if (isCSSRequest(url) && req.headers.accept?.includes("text/css")) {
-        //   url = injectQuery(url, "direct");
-        // }
 
         // check if we can return 304 early
         const ifNoneMatch = req.headers["if-none-match"];

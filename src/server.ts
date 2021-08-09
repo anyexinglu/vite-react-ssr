@@ -18,10 +18,9 @@ export async function createServer() {
   app.use(vite.middlewares);
 
   app.use("*", async (req, res) => {
-    console.log("...inner use *");
     try {
       const url = req.originalUrl;
-      console.log("...get url:", url);
+      console.log("...inner use *", url);
 
       let template = fs.readFileSync(resolve("../template.html"), "utf-8");
       let render = (await vite.ssrLoadModule("src/entry-server.jsx")).render;
