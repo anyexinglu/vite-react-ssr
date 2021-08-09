@@ -4,14 +4,8 @@ import aliasPlugin from "@rollup/plugin-alias";
 import { resolvePlugin } from "./resolve";
 import { esbuildPlugin } from "./esbuild";
 import { importAnalysisPlugin } from "./importAnalysis";
-// import { cssPlugin, cssPostPlugin } from './css'
-import { assetPlugin } from "./asset";
+// import { assetPlugin } from "./asset";
 import { clientInjectionsPlugin } from "./clientInjections";
-// import { htmlInlineScriptProxyPlugin } from "./html";
-// import { wasmPlugin } from "./wasm";
-// import { webWorkerPlugin } from "./worker";
-// import { preAliasPlugin } from "./preAlias";
-// import { definePlugin } from "./define";
 
 export async function resolvePlugins(
   config: ResolvedConfig,
@@ -20,14 +14,7 @@ export async function resolvePlugins(
   postPlugins: Plugin[]
 ): Promise<Plugin[]> {
   const isBuild = config.command === "build";
-
-  // const buildPlugins = { pre: [], post: [] };
-  //  isBuild
-  //   ? (await import("../build")).resolveBuildPlugins(config)
-  //   : { pre: [], post: [] };
-
   return [
-    // isBuild ? null : preAliasPlugin(),
     aliasPlugin({ entries: config.resolve.alias }),
     ...prePlugins,
     resolvePlugin({
@@ -38,26 +25,8 @@ export async function resolvePlugins(
       ssrTarget: config.ssr?.target,
       asSrc: true,
     }),
-    // htmlInlineScriptProxyPlugin(),
-    // cssPlugin(config),
     config.esbuild !== false ? esbuildPlugin(config.esbuild) : null,
-    // jsonPlugin(
-    //   {
-    //     namedExports: true,
-    //     ...config.json,
-    //   },
-    //   isBuild
-    // ),
-    // wasmPlugin(config),
-    // webWorkerPlugin(config),
-    assetPlugin(config),
-    // ...normalPlugins,
-    // definePlugin(config),
-    // cssPostPlugin(config),
-    // ...buildPlugins.pre,
-    // ...postPlugins,
-    // ...buildPlugins.post,
-    // internal server-only plugins are always applied after everything else
+    // assetPlugin(config),
     ...(isBuild
       ? []
       : [clientInjectionsPlugin(config), importAnalysisPlugin(config)]),

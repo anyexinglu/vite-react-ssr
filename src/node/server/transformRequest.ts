@@ -15,7 +15,7 @@ import {
   ensureLeadingSlash,
   normalizePath,
 } from "../utils";
-import { checkPublicFile } from "../plugins/asset";
+// import { checkPublicFile } from "../plugins/asset";
 import { ssrTransform } from "../ssr/ssrTransform";
 // import { injectSourcesContent } from "./sourcemap";
 // import { isFileServingAllowed } from './middlewares/static'
@@ -140,16 +140,16 @@ export async function transformRequest(
     }
   }
   if (code == null) {
-    if (checkPublicFile(url, config)) {
-      throw new Error(
-        `Failed to load url ${url} (resolved id: ${id}). ` +
-          `This file is in /public and will be copied as-is during build without ` +
-          `going through the plugin transforms, and therefore should not be ` +
-          `imported from source code. It can only be referenced via HTML tags.`
-      );
-    } else {
-      return null;
-    }
+    // if (checkPublicFile(url, config)) {
+    //   throw new Error(
+    //     `Failed to load url ${url} (resolved id: ${id}). ` +
+    //       `This file is in /public and will be copied as-is during build without ` +
+    //       `going through the plugin transforms, and therefore should not be ` +
+    //       `imported from source code. It can only be referenced via HTML tags.`
+    //   );
+    // } else {
+    return null;
+    // }
   }
 
   // ensure module in graph after successful load

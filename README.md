@@ -16,7 +16,7 @@ Vite + React + SSR + TS
 
 没有的功能：
 
-- CSS 热加载
+- CSS / config（配置文件）热加载
 - CSR 模式
 - vite.config.ts 没有 Vite 那么多的扩展性（方便理解源码，故意删掉了）
 - production 模式（rollup 打包）

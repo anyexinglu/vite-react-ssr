@@ -33,7 +33,7 @@ import {
   NULL_BYTE_PLACEHOLDER,
 } from "../constants";
 import { ViteDevServer } from "..";
-import { checkPublicFile } from "./asset";
+// import { checkPublicFile } from "./asset";
 import { parse as parseJS } from "acorn";
 import type { Node } from "estree";
 import { transformImportGlob } from "../importGlob";
@@ -312,18 +312,18 @@ export function importAnalysisPlugin(config: ResolvedConfig): Plugin {
           }
 
           // warn imports to non-asset /public files
-          if (
-            specifier.startsWith("/") &&
-            !config.assetsInclude(cleanUrl(specifier)) &&
-            !specifier.endsWith(".json") &&
-            checkPublicFile(specifier, config)
-          ) {
-            throw new Error(
-              `Cannot import non-asset file ${specifier} which is inside /public.` +
-                `JS/CSS files inside /public are copied as-is on build and ` +
-                `can only be referenced via <script src> or <link href> in html.`
-            );
-          }
+          // if (
+          //   specifier.startsWith("/") &&
+          //   !config.assetsInclude(cleanUrl(specifier)) &&
+          //   !specifier.endsWith(".json") &&
+          //   checkPublicFile(specifier, config)
+          // ) {
+          //   throw new Error(
+          //     `Cannot import non-asset file ${specifier} which is inside /public.` +
+          //       `JS/CSS files inside /public are copied as-is on build and ` +
+          //       `can only be referenced via <script src> or <link href> in html.`
+          //   );
+          // }
 
           // normalize
           const [normalizedUrl, resolvedId] = await normalizeUrl(
