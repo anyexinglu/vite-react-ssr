@@ -305,50 +305,50 @@ export async function optimizeDeps(
 // https://github.com/vitejs/vite/issues/1724#issuecomment-767619642
 // a list of modules that pretends to be ESM but still uses `require`.
 // this causes esbuild to wrap them as CJS even when its entry appears to be ESM.
-const KNOWN_INTEROP_IDS = new Set(["moment"]);
+// const KNOWN_INTEROP_IDS = new Set(["moment"]);
 
-function needsInterop(
-  id: string,
-  exportsData: ExportsData,
-  outputs: Record<string, any>,
-  cacheDirOutputPath: string
-): boolean {
-  if (KNOWN_INTEROP_IDS.has(id)) {
-    return true;
-  }
-  const [imports, exports] = exportsData;
-  // entry has no ESM syntax - likely CJS or UMD
-  if (!exports.length && !imports.length) {
-    return true;
-  }
+// function needsInterop(
+//   id: string,
+//   exportsData: ExportsData,
+//   outputs: Record<string, any>,
+//   cacheDirOutputPath: string
+// ): boolean {
+//   if (KNOWN_INTEROP_IDS.has(id)) {
+//     return true;
+//   }
+//   const [imports, exports] = exportsData;
+//   // entry has no ESM syntax - likely CJS or UMD
+//   if (!exports.length && !imports.length) {
+//     return true;
+//   }
 
-  // if a peer dependency used require() on a ESM dependency, esbuild turns the
-  // ESM dependency's entry chunk into a single default export... detect
-  // such cases by checking exports mismatch, and force interop.
-  const flatId = flattenId(id) + ".js";
-  let generatedExports: string[] | undefined;
-  for (const output in outputs) {
-    if (
-      normalizePath(output) ===
-      normalizePath(path.join(cacheDirOutputPath, flatId))
-    ) {
-      generatedExports = outputs[output].exports;
-      break;
-    }
-  }
+//   // if a peer dependency used require() on a ESM dependency, esbuild turns the
+//   // ESM dependency's entry chunk into a single default export... detect
+//   // such cases by checking exports mismatch, and force interop.
+//   const flatId = flattenId(id) + ".js";
+//   let generatedExports: string[] | undefined;
+//   for (const output in outputs) {
+//     if (
+//       normalizePath(output) ===
+//       normalizePath(path.join(cacheDirOutputPath, flatId))
+//     ) {
+//       generatedExports = outputs[output].exports;
+//       break;
+//     }
+//   }
 
-  if (
-    !generatedExports ||
-    (isSingleDefaultExport(generatedExports) && !isSingleDefaultExport(exports))
-  ) {
-    return true;
-  }
-  return false;
-}
+//   if (
+//     !generatedExports ||
+//     (isSingleDefaultExport(generatedExports) && !isSingleDefaultExport(exports))
+//   ) {
+//     return true;
+//   }
+//   return false;
+// }
 
-function isSingleDefaultExport(exports: string[]) {
-  return exports.length === 1 && exports[0] === "default";
-}
+// function isSingleDefaultExport(exports: string[]) {
+//   return exports.length === 1 && exports[0] === "default";
+// }
 
 const lockfileFormats = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml"];
 
