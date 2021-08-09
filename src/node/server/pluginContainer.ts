@@ -81,7 +81,7 @@ export interface PluginContainerOptions {
 export interface PluginContainer {
   options: InputOptions;
   buildStart(options: InputOptions): Promise<void>;
-  watchChange(id: string, event?: ChangeEvent): void;
+  // watchChange(id: string, event?: ChangeEvent): void;
   resolveId(
     id: string,
     importer?: string,
@@ -95,7 +95,7 @@ export interface PluginContainer {
     ssr?: boolean
   ): Promise<SourceDescription | null>;
   load(id: string, ssr?: boolean): Promise<LoadResult | null>;
-  close(): Promise<void>;
+  // close(): Promise<void>;
 }
 
 type PluginContext = Omit<
@@ -118,6 +118,7 @@ export let parser = acorn.Parser.extend(
   acornNumericSeparator
 );
 
+// 挨个执行 plugins 的 buildStart、resolveId、transform、load
 export async function createPluginContainer(
   { plugins, logger, root, build: { rollupOptions } }: ResolvedConfig,
   watcher?: FSWatcher
@@ -150,17 +151,6 @@ export async function createPluginContainer(
       watchMode: true,
     },
   };
-
-  function warnIncompatibleMethod(method: string, plugin: string) {
-    logger.warn(
-      chalk.cyan(`[plugin:${plugin}] `) +
-        chalk.yellow(
-          `context method ${chalk.bold(
-            `${method}()`
-          )} is not supported in serve mode. This plugin is likely not vite-compatible.`
-        )
-    );
-  }
 
   // we should create a new context for each async hook pipeline so that the
   // active plugin in that pipeline can be tracked in a concurrency-safe manner.
@@ -227,91 +217,26 @@ export async function createPluginContainer(
     }
 
     emitFile(assetOrFile: EmittedFile) {
-      warnIncompatibleMethod(`emitFile`, this._activePlugin!.name);
+      console.log(`emitFile`, this._activePlugin!.name);
       return "";
     }
 
     setAssetSource() {
-      warnIncompatibleMethod(`setAssetSource`, this._activePlugin!.name);
+      console.log(`setAssetSource`, this._activePlugin!.name);
     }
 
     getFileName() {
-      warnIncompatibleMethod(`getFileName`, this._activePlugin!.name);
+      console.log(`getFileName`, this._activePlugin!.name);
       return "";
     }
 
-    warn(
-      e: string | RollupError,
-      position?: number | { column: number; line: number }
-    ) {
-      const err = formatError(e, position, this);
-      const msg = err?.message;
-      //  buildErrorMessage(
-      //   err,
-      //   [chalk.yellow(`warning: ${err.message}`)],
-      //   false
-      // )
-      logger.warn(msg, {
-        clear: true,
-        timestamp: true,
-      });
+    warn(e) {
+      console.log("...warn", e);
     }
-
-    error(
-      e: string | RollupError,
-      position?: number | { column: number; line: number }
-    ): never {
-      // error thrown here is caught by the transform middleware and passed on
-      // the the error middleware.
-      throw formatError(e, position, this);
+    error(e): never {
+      console.log("...error", e);
+      throw e;
     }
-  }
-
-  function formatError(
-    e: string | RollupError,
-    position: number | { column: number; line: number } | undefined,
-    ctx: Context
-  ) {
-    const err = (typeof e === "string" ? new Error(e) : e) as RollupError;
-    if (ctx._activePlugin) err.plugin = ctx._activePlugin.name;
-    if (ctx._activeId && !err.id) err.id = ctx._activeId;
-    if (ctx._activeCode) {
-      err.pluginCode = ctx._activeCode;
-      const pos =
-        position != null
-          ? position
-          : err.pos != null
-          ? err.pos
-          : // some rollup plugins, e.g. json, sets position instead of pos
-            (err as any).position;
-      if (pos != null) {
-        err.loc = err.loc || {
-          file: err.id,
-          ...numberToPos(ctx._activeCode, pos),
-        };
-        err.frame = err.frame || generateCodeFrame(ctx._activeCode, pos);
-      } else if (err.loc) {
-        // css preprocessors may report errors in an included file
-        if (!err.frame) {
-          let code = ctx._activeCode;
-          if (err.loc.file) {
-            err.id = normalizePath(err.loc.file);
-            try {
-              code = fs.readFileSync(err.loc.file, "utf-8");
-            } catch {}
-          }
-          err.frame = generateCodeFrame(code, err.loc);
-        }
-      } else if ((err as any).line && (err as any).column) {
-        err.loc = {
-          file: err.id,
-          line: (err as any).line,
-          column: (err as any).column,
-        };
-        err.frame = err.frame || generateCodeFrame(ctx._activeCode, err.loc);
-      }
-    }
-    return err;
   }
 
   class TransformContext extends Context {
@@ -375,7 +300,7 @@ export async function createPluginContainer(
 
   let closed = false;
 
-  const container: PluginContainer = {
+  const container = {
     options: await (async () => {
       let options = rollupOptions;
       for (const plugin of plugins) {
@@ -404,6 +329,7 @@ export async function createPluginContainer(
         plugins.map(plugin => {
           if (plugin.buildStart) {
             return plugin.buildStart.call(
+              // 目前只有 Asset 这个插件有 buildStart
               new Context(plugin) as any,
               container.options as NormalizedInputOptions
             );
@@ -520,29 +446,6 @@ export async function createPluginContainer(
         code,
         map: ctx._getCombinedSourcemap(),
       };
-    },
-
-    watchChange(id, event = "update") {
-      const ctx = new Context();
-      if (watchFiles.has(id)) {
-        for (const plugin of plugins) {
-          if (!plugin.watchChange) continue;
-          ctx._activePlugin = plugin;
-          plugin.watchChange.call(ctx as any, id, { event });
-        }
-      }
-    },
-
-    async close() {
-      if (closed) return;
-      const ctx = new Context();
-      await Promise.all(
-        plugins.map(p => p.buildEnd && p.buildEnd.call(ctx as any))
-      );
-      await Promise.all(
-        plugins.map(p => p.closeBundle && p.closeBundle.call(ctx as any))
-      );
-      closed = true;
     },
   };
 

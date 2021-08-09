@@ -1,75 +1,22 @@
-import * as fs from "fs";
 import * as path from "path";
-// import * as net from "net";
-// import * as http from "http";
-// import * as https from "https";
 import connect from "connect";
-import * as chalk from "chalk";
 import { watch as chokidarWatch } from "chokidar";
-// import { resolveHttpsConfig, resolveHttpServer } from "./http";
-import { resolveConfig, InlineConfig, ResolvedConfig } from "../config";
-import { createPluginContainer, PluginContainer } from "./pluginContainer";
+import { resolveConfig } from "../config";
+import { createPluginContainer } from "./pluginContainer";
 import { FSWatcher, WatchOptions } from "../types/chokidar";
-import { createWebSocketServer, WebSocketServer } from "./ws";
+import { createWebSocketServer } from "./ws";
 import { transformMiddleware } from "./middlewares/transform";
-import { ModuleGraph, ModuleNode } from "./moduleGraph";
+import { ModuleGraph } from "./moduleGraph";
 import { Connect } from "../types/connect";
-import { createDebugger, ensureLeadingSlash } from "../utils";
-// import { searchForWorkspaceRoot } from "./searchRoot";
-import { CLIENT_DIR } from "../constants";
-
-// import { normalizePath } from "../utils";
 export function normalizePath(id: string): string {
   return path.posix.normalize(id);
 }
-
-// import { errorMiddleware, prepareError } from "./middlewares/error";
-import { handleHMRUpdate, HmrOptions } from "./hmr";
-// import { openBrowser } from "./openBrowser";
-// import { TransformResult } from "rollup";
-import { TransformOptions, transformRequest } from "./transformRequest";
-import {
-  transformWithEsbuild,
-  ESBuildTransformResult,
-} from "../plugins/esbuild";
-// import { TransformOptions as EsbuildTransformOptions } from "esbuild";
-import { DepOptimizationMetadata, optimizeDeps } from "../optimizer";
+import { handleHMRUpdate } from "./hmr";
+import { transformRequest } from "./transformRequest";
+import { transformWithEsbuild } from "../plugins/esbuild";
+import { optimizeDeps } from "../optimizer";
 import { ssrLoadModule } from "../ssr/ssrModuleLoader";
 import { resolveSSRExternal } from "../ssr/ssrExternal";
-// import { ssrRewriteStacktrace } from "../ssr/ssrStacktrace";
-// import { createMissingImporterRegisterFn } from "../optimizer/registerMissing";
-// import { printServerUrls } from "../logger";
-// import { resolveHostname } from "../utils";
-
-export function resolveHostname(
-  optionsHost: string | boolean | undefined
-): any {
-  let host: string | undefined;
-  if (
-    optionsHost === undefined ||
-    optionsHost === false ||
-    optionsHost === "localhost"
-  ) {
-    // Use a secure default
-    host = "127.0.0.1";
-  } else if (optionsHost === true) {
-    // If passed --host in the CLI without arguments
-    host = undefined; // undefined typically means 0.0.0.0 or :: (listen on all IPs)
-  } else {
-    host = optionsHost;
-  }
-
-  // Set host name to localhost when possible, unless the user explicitly asked for '127.0.0.1'
-  const name =
-    (optionsHost !== "127.0.0.1" && host === "127.0.0.1") ||
-    host === "0.0.0.0" ||
-    host === "::" ||
-    host === undefined
-      ? "localhost"
-      : host;
-
-  return { host, name };
-}
 
 export interface ServerOptions {
   host?: string | boolean;
@@ -273,7 +220,7 @@ export interface ViteDevServer {
   /**
    * Start the server.
    */
-  listen(port?: number, isRestart?: boolean): Promise<ViteDevServer>;
+  // listen(port?: number, isRestart?: boolean): Promise<ViteDevServer>;
   /**
    * Stop the server.
    */
@@ -320,22 +267,12 @@ export async function createServer(
   inlineConfig: any = {}
 ): Promise<ViteDevServer> {
   const config = await resolveConfig(inlineConfig, "serve", "development");
-  console.log("...config", config);
-  //  await resolveConfig(inlineConfig, "serve", "development");
+  // console.log("...config", config);
   const root = config.root;
   const serverConfig = config.server;
-  const httpsOptions = undefined; // await resolveHttpsConfig(config);
-  // let { middlewareMode } = serverConfig;
-  // if (middlewareMode === true) {
-  let middlewareMode = "ssr";
-  // }
-
   const middlewares = connect() as Connect.Server;
   const httpServer = null;
-  //  middlewareMode
-  //   ? null
-  //   : await resolveHttpServer(serverConfig, middlewares, httpsOptions);
-  const ws = createWebSocketServer(httpServer, config as any, httpsOptions);
+  const ws = createWebSocketServer(httpServer, config as any);
 
   const { ignored = [], ...watchOptions } = serverConfig.watch || ({} as any);
   const watcher = chokidarWatch(path.resolve(root), {
@@ -384,25 +321,13 @@ export async function createServer(
       }
       return ssrLoadModule(url, server);
     },
-    // ssrFixStacktrace(e) {
-    //   if (e.stack) {
-    //     e.stack = ssrRewriteStacktrace(e.stack, moduleGraph);
-    //   }
-    // },
-    listen(port?: number, isRestart?: boolean) {
-      return startServer(server, port, isRestart);
-    },
     async close() {
+      console.log("...server closing");
       process.off("SIGTERM", exitProcess);
-
-      if (!middlewareMode && process.env.CI !== "true") {
-        process.stdin.off("end", exitProcess);
-      }
-
       await Promise.all([
         watcher.close(),
         ws.close(),
-        container.close(),
+        // container.close?.(),
         closeHttpServer(),
       ]);
     },
@@ -414,8 +339,6 @@ export async function createServer(
     _pendingReload: null,
   };
 
-  // server.transformIndexHtml = createDevHtmlTransformFn(server);
-
   exitProcess = async () => {
     try {
       await server.close();
@@ -426,15 +349,10 @@ export async function createServer(
 
   process.once("SIGTERM", exitProcess);
 
-  if (!middlewareMode && process.env.CI !== "true") {
-    process.stdin.on("end", exitProcess);
-  }
-
   watcher.on("change", async file => {
     file = normalizePath(file);
     // invalidate module graph cache on file change
     moduleGraph.onFileChange(file);
-    // if (serverConfig.hmr !== false) {
     try {
       await handleHMRUpdate(file, server);
     } catch (err) {
@@ -444,7 +362,6 @@ export async function createServer(
       //   err: new Error("err"), // prepareError(err),
       // });
     }
-    // }
   });
 
   watcher.on("add", file => {
@@ -479,6 +396,7 @@ export async function createServer(
   // error handler
   // middlewares.use(errorMiddleware(server, !!middlewareMode));
 
+  // 优化依赖，提前将依赖编译到 node_modules 的 .vite 中
   const runOptimize = async () => {
     if (config.cacheDir) {
       server._isRunningOptimizer = true;
@@ -487,7 +405,6 @@ export async function createServer(
       } finally {
         server._isRunningOptimizer = false;
       }
-      // server._registerMissingImport = createMissingImporterRegisterFn(server);
     }
   };
 
@@ -495,99 +412,6 @@ export async function createServer(
   await runOptimize();
 
   return server;
-}
-
-async function startServer(
-  server: ViteDevServer,
-  inlinePort?: number,
-  isRestart: boolean = false
-): Promise<ViteDevServer> {
-  const httpServer = server.httpServer;
-  if (!httpServer) {
-    throw new Error("Cannot call server.listen in middleware mode.");
-  }
-
-  const options = server.config.server;
-  let port = inlinePort || options.port || 4100;
-  const hostname = resolveHostname(options.host);
-
-  const protocol = options.https ? "https" : "http";
-  const info = server.config.logger.info;
-  const base = server.config.base;
-
-  return new Promise((resolve, reject) => {
-    const onError = (e: Error & { code?: string }) => {
-      if (e.code === "EADDRINUSE") {
-        if (options.strictPort) {
-          httpServer.removeListener("error", onError);
-          reject(new Error(`Port ${port} is already in use`));
-        } else {
-          info(`Port ${port} is in use, trying another one...`);
-          httpServer.listen(++port, hostname.host);
-        }
-      } else {
-        httpServer.removeListener("error", onError);
-        reject(e);
-      }
-    };
-
-    httpServer.on("error", onError);
-
-    httpServer.listen(port, hostname.host, () => {
-      httpServer.removeListener("error", onError);
-
-      info(
-        chalk.cyan(`\n  vite v${require("vite/package.json").version}`) +
-          chalk.green(` dev server running at:\n`),
-        {
-          clear: !server.config.logger.hasWarned,
-        }
-      );
-
-      // printServerUrls(hostname, protocol, port, base, info);
-
-      // @ts-ignore
-      if (global.__vite_start_time) {
-        info(
-          chalk.cyan(
-            // @ts-ignore
-            `\n  ready in ${Date.now() - global.__vite_start_time}ms.\n`
-          )
-        );
-      }
-
-      // @ts-ignore
-      const profileSession = global.__vite_profile_session;
-      if (profileSession) {
-        profileSession.post("Profiler.stop", (err: any, { profile }: any) => {
-          // Write profile to disk, upload, etc.
-          if (!err) {
-            const outPath = path.resolve("./vite-profile.cpuprofile");
-            fs.writeFileSync(outPath, JSON.stringify(profile));
-            info(
-              chalk.yellow(
-                `  CPU profile written to ${chalk.white.dim(outPath)}\n`
-              )
-            );
-          } else {
-            throw err;
-          }
-        });
-      }
-
-      if (options.open && !isRestart) {
-        const path = typeof options.open === "string" ? options.open : base;
-        console.log(
-          "open openBrowser",
-          `${protocol}://${hostname.name}:${port}${path}`,
-          true,
-          server.config.logger
-        );
-      }
-
-      resolve(server);
-    });
-  });
 }
 
 function createServerCloseFn(server: any) {
@@ -624,34 +448,4 @@ function createServerCloseFn(server: any) {
         resolve();
       }
     });
-}
-
-function resolvedAllowDir(root: string, dir: string): string {
-  return ensureLeadingSlash(normalizePath(path.resolve(root, dir)));
-}
-
-// export default createServer;
-export function resolveServerOptions(root: string, raw?: ServerOptions): any {
-  // return {};
-  const server = raw || {};
-  let allowDirs = server.fs?.allow;
-
-  if (!allowDirs) {
-    allowDirs = [root]; // [searchForWorkspaceRoot(root)]; // 效果一样 '/Users/yangxiayan/Documents/duoduo/vite/vite-ssr'
-  }
-
-  allowDirs = allowDirs.map(i => resolvedAllowDir(root, i));
-
-  // only push client dir when vite itself is outside-of-root
-  const resolvedClientDir = resolvedAllowDir(root, CLIENT_DIR);
-  if (!allowDirs.some(i => resolvedClientDir.startsWith(i))) {
-    allowDirs.push(resolvedClientDir);
-  }
-
-  server.fs = {
-    // TODO: make strict by default
-    strict: server.fs?.strict,
-    allow: allowDirs,
-  };
-  return server as ResolvedServerOptions;
 }

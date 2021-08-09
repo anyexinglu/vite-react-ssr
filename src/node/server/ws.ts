@@ -1,15 +1,10 @@
 import chalk from "chalk";
-import { Server, STATUS_CODES } from "http";
-import {
-  createServer as createHttpsServer,
-  ServerOptions as HttpsServerOptions,
-} from "https";
+import { Server } from "http";
 import WebSocket from "ws";
 import { ErrorPayload, HMRPayload } from "../types/hmrPayload";
 import { ResolvedConfig } from "..";
 
 export const HMR_HEADER = "vite-hmr";
-
 export interface WebSocketServer {
   send(payload: HMRPayload): void;
   close(): Promise<void>;
@@ -17,55 +12,17 @@ export interface WebSocketServer {
 
 export function createWebSocketServer(
   server: Server | null,
-  config: ResolvedConfig,
-  httpsOptions?: HttpsServerOptions
+  config: ResolvedConfig
 ): WebSocketServer {
   let wss: WebSocket.Server;
   let httpsServer: Server | undefined = undefined;
 
   const hmr = typeof config.server.hmr === "object" && config.server.hmr;
-  const wsServer = (hmr && hmr.server) || server;
-
-  if (wsServer) {
-    wss = new WebSocket.Server({ noServer: true });
-    wsServer.on("upgrade", (req, socket, head) => {
-      if (req.headers["sec-websocket-protocol"] === HMR_HEADER) {
-        wss.handleUpgrade(req, socket, head, ws => {
-          wss.emit("connection", ws, req);
-        });
-      }
-    });
-  } else {
-    const websocketServerOptions: WebSocket.ServerOptions = {};
-    const port = (hmr && hmr.port) || 24678;
-    if (httpsOptions) {
-      // if we're serving the middlewares over https, the ws library doesn't support automatically creating an https server, so we need to do it ourselves
-      // create an inline https server and mount the websocket server to it
-      httpsServer = createHttpsServer(httpsOptions, (req, res) => {
-        const statusCode = 426;
-        const body = STATUS_CODES[statusCode];
-        if (!body)
-          throw new Error(
-            `No body text found for the ${statusCode} status code`
-          );
-
-        res.writeHead(statusCode, {
-          "Content-Length": body.length,
-          "Content-Type": "text/plain",
-        });
-        res.end(body);
-      });
-
-      httpsServer.listen(port);
-      websocketServerOptions.server = httpsServer;
-    } else {
-      // we don't need to serve over https, just let ws handle its own server
-      websocketServerOptions.port = port;
-    }
-
-    // vite dev server in middleware mode
-    wss = new WebSocket.Server(websocketServerOptions);
-  }
+  const websocketServerOptions: WebSocket.ServerOptions = {};
+  const port = (hmr && hmr.port) || 24678;
+  // we don't need to serve over https, just let ws handle its own server
+  websocketServerOptions.port = port;
+  wss = new WebSocket.Server(websocketServerOptions);
 
   wss.on("connection", socket => {
     socket.send(JSON.stringify({ type: "connected" }));

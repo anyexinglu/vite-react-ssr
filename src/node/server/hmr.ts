@@ -79,12 +79,13 @@ export async function handleHMRUpdate(
 
   // check if any plugin wants to perform custom HMR handling
   const timestamp = Date.now();
-  const hmrContext: HmrContext = {
-    file,
-    timestamp,
+  // 因为目前没有 plugins 有 handleHotUpdate 方法，所以可以去掉 modules 意外以外参数
+  const hmrContext = {
+    // file,
+    // timestamp,
     modules: mods ? [...mods] : [],
-    read: () => readModifiedFile(file),
-    server,
+    // read: () => readModifiedFile(file),
+    // server,
   };
 
   // for (const plugin of config.plugins) {
@@ -441,53 +442,54 @@ function error(pos: number) {
 // vitejs/vite#610 when hot-reloading Vue files, we read immediately on file
 // change event and sometimes this can be too early and get an empty buffer.
 // Poll until the file's modified time has changed before reading again.
-async function readModifiedFile(file: string): Promise<string> {
-  const content = fs.readFileSync(file, "utf-8");
-  if (!content) {
-    const mtime = fs.statSync(file).mtimeMs;
-    await new Promise(r => {
-      let n = 0;
-      const poll = async () => {
-        n++;
-        const newMtime = fs.statSync(file).mtimeMs;
-        if (newMtime !== mtime || n > 10) {
-          r(0);
-        } else {
-          setTimeout(poll, 10);
-        }
-      };
-      setTimeout(poll, 10);
-    });
-    return fs.readFileSync(file, "utf-8");
-  } else {
-    return content;
-  }
-}
+// async function readModifiedFile(file: string): Promise<string> {
+//   console.log("...readModifiedFile", file);
+//   const content = fs.readFileSync(file, "utf-8");
+//   if (!content) {
+//     const mtime = fs.statSync(file).mtimeMs;
+//     await new Promise(r => {
+//       let n = 0;
+//       const poll = async () => {
+//         n++;
+//         const newMtime = fs.statSync(file).mtimeMs;
+//         if (newMtime !== mtime || n > 10) {
+//           r(0);
+//         } else {
+//           setTimeout(poll, 10);
+//         }
+//       };
+//       setTimeout(poll, 10);
+//     });
+//     return fs.readFileSync(file, "utf-8");
+//   } else {
+//     return content;
+//   }
+// }
 
-async function restartServer(server: ViteDevServer) {
-  // @ts-ignore
-  global.__vite_start_time = Date.now();
-  let newServer = null;
-  try {
-    newServer = await createServer(server.config.inlineConfig);
-  } catch (err) {
-    server.ws.send({
-      type: "error",
-      err: err?.message, // prepareError(err),
-    });
-    return;
-  }
+// async function restartServer(server: ViteDevServer) {
+//   // @ts-ignore
+//   global.__vite_start_time = Date.now();
+//   let newServer = null;
+//   try {
+//     newServer = await createServer(server.config.inlineConfig);
+//   } catch (err) {
+//     server.ws.send({
+//       type: "error",
+//       err: err?.message, // prepareError(err),
+//     });
+//     return;
+//   }
 
-  await server.close();
-  for (const key in newServer) {
-    if (key !== "app") {
-      // @ts-ignore
-      server[key] = newServer[key];
-    }
-  }
-  if (!server.config.server.middlewareMode) {
-    await server.listen(undefined, true);
-  } else {
-    server.config.logger.info("server restarted.", { timestamp: true });
-  }
-}
+//   await server.close();
+//   for (const key in newServer) {
+//     if (key !== "app") {
+//       // @ts-ignore
+//       server[key] = newServer[key];
+//     }
+//   }
+//   // if (!server.config.server.middlewareMode) {
+//   //   await server.listen(undefined, true);
+//   // } else {
+//   server.config.logger.info("server restarted.", { timestamp: true });
+//   // }
+// }

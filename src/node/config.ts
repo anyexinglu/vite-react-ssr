@@ -1,26 +1,10 @@
 import fs from "fs";
 import path from "path";
 import { Plugin } from "./plugin";
-// import { resolveBuildOptions } from "./build";
-import {
-  ResolvedServerOptions,
-  resolveServerOptions,
-  ServerOptions,
-} from "./server";
-// import { CSSOptions } from "./plugins/css";
-import {
-  createDebugger,
-  isExternalUrl,
-  isObject,
-  lookupFile,
-  normalizePath,
-} from "./utils";
+import { ResolvedServerOptions, ServerOptions } from "./server";
+import { createDebugger, isObject, lookupFile, normalizePath } from "./utils";
 import { resolvePlugins } from "./plugins";
 import chalk from "chalk";
-// import { ESBuildOptions } from "./plugins/esbuild";
-// import dotenv from "dotenv";
-// import dotenvExpand from "dotenv-expand";
-// import { Alias, AliasOptions } from "types/alias";
 import { CLIENT_DIR, DEFAULT_ASSETS_RE } from "./constants";
 import {
   InternalResolveOptions,
@@ -30,14 +14,10 @@ import {
 import { createLogger, Logger, LogLevel } from "./logger";
 import { DepOptimizationOptions } from "./optimizer";
 import { createFilter } from "@rollup/pluginutils";
-// import { ResolvedBuildOptions } from ".";
-import { parse as parseUrl } from "url";
-// import { JsonOptions } from "./plugins/json";
 import {
   createPluginContainer,
   PluginContainer,
 } from "./server/pluginContainer";
-// import aliasPlugin from "@rollup/plugin-alias";
 import { build } from "esbuild";
 
 const debug = createDebugger("vite:config");
@@ -234,21 +214,14 @@ export async function resolveConfig(
 ): Promise<ResolvedConfig> {
   let config = inlineConfig;
   let configFileDependencies: string[] = [];
-  let mode = inlineConfig.mode || defaultMode;
-
-  // some dependencies e.g. @vue/compiler-* relies on NODE_ENV for getting
-  // production-specific behavior, so set it here even though we haven't
-  // resolve the final mode yet
-  if (mode === "production") {
-    process.env.NODE_ENV = "production";
-  }
+  let mode = "development"; // inlineConfig.mode || defaultMode;  // 目前只支持 ‘development’
 
   const configEnv = {
     mode,
     command,
   };
 
-  let { configFile } = config;
+  let { configFile } = config; // configFile 是 undefined
   if (configFile !== false) {
     const loadResult = await loadConfigFromFile(
       configEnv,
@@ -283,16 +256,7 @@ export async function resolveConfig(
     normalPlugins = [],
     postPlugins = [];
   // run config hooks
-  const userPlugins = rawUserPlugins; // [...prePlugins, ...normalPlugins, ...postPlugins];
-  // for (const p of userPlugins) {
-  //   if (p.config) {
-  //     const res = await p.config(config, configEnv);
-  //     if (res) {
-  //       config = mergeConfig(config, res);
-  //     }
-  //   }
-  // }
-
+  const userPlugins = rawUserPlugins;
   // resolve root
   const resolvedRoot = normalizePath(
     config.root ? path.resolve(config.root) : process.cwd()
@@ -323,40 +287,10 @@ export async function resolveConfig(
   // Note it is possible for user to have a custom mode, e.g. `staging` where
   // production-like behavior is expected. This is indicated by NODE_ENV=production
   // loaded from `.staging.env` and set by us as VITE_USER_NODE_ENV
-  const isProduction =
-    (process.env.VITE_USER_NODE_ENV || mode) === "production";
-  if (isProduction) {
-    // in case default mode was not production and is overwritten
-    process.env.NODE_ENV = "production";
-  }
+  const isProduction = false;
 
   // resolve public base url
-  const BASE_URL = "/"; // resolveBaseUrl(config.base, command === "build", logger);
-  const resolvedBuildOptions = {
-    target: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
-    polyfillDynamicImport: false,
-    outDir: "dist",
-    assetsDir: "assets",
-    assetsInlineLimit: 4096,
-    cssCodeSplit: true,
-    sourcemap: false,
-    rollupOptions: {},
-    commonjsOptions: { include: [{}], extensions: [".js", ".cjs"] },
-    dynamicImportVarsOptions: { warnOnError: true, exclude: [{}] },
-    minify: false,
-    terserOptions: {},
-    cleanCssOptions: {},
-    write: true,
-    emptyOutDir: null,
-    manifest: false,
-    lib: false,
-    ssr: false,
-    ssrManifest: false,
-    brotliSize: true,
-    chunkSizeWarningLimit: 500,
-    watch: null,
-  };
-  //  resolveBuildOptions(config.build);
+  const BASE_URL = "/";
 
   // resolve cache directory
   const pkgPath = lookupFile(
@@ -434,8 +368,38 @@ export async function resolveConfig(
     mode,
     isProduction,
     plugins: userPlugins,
-    server: resolveServerOptions(resolvedRoot, config.server),
-    build: resolvedBuildOptions,
+    server: {
+      middlewareMode: "ssr",
+      watch: { usePolling: true, interval: 100 },
+      fs: {
+        strict: undefined,
+        allow: [resolvedRoot],
+      },
+    },
+    build: {
+      target: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
+      polyfillDynamicImport: false,
+      outDir: "dist",
+      assetsDir: "assets",
+      assetsInlineLimit: 4096,
+      cssCodeSplit: true,
+      sourcemap: false,
+      rollupOptions: {},
+      commonjsOptions: { include: [{}], extensions: [".js", ".cjs"] },
+      dynamicImportVarsOptions: { warnOnError: true, exclude: [{}] },
+      minify: false,
+      terserOptions: {},
+      cleanCssOptions: {},
+      write: true,
+      emptyOutDir: null,
+      manifest: false,
+      lib: false,
+      ssr: false,
+      ssrManifest: false,
+      brotliSize: true,
+      chunkSizeWarningLimit: 500,
+      watch: null,
+    },
     env: {
       ...userEnv,
       BASE_URL,
@@ -467,149 +431,8 @@ export async function resolveConfig(
   // call configResolved hooks
   await Promise.all(userPlugins.map(p => p.configResolved?.(resolved)));
 
-  if (process.env.DEBUG) {
-    debug(`using resolved config: %O`, {
-      ...resolved,
-      plugins: resolved.plugins.map(p => p.name),
-    });
-  }
-
-  // TODO Deprecation warnings - remove when out of beta
-
-  const logDeprecationWarning = (
-    deprecatedOption: string,
-    hint: string,
-    error?: Error
-  ) => {
-    logger.warn(
-      chalk.yellow.bold(
-        `(!) "${deprecatedOption}" option is deprecated. ${hint}${
-          error ? `\n${error.stack}` : ""
-        }`
-      )
-    );
-  };
-
-  if (config.build?.base) {
-    logDeprecationWarning(
-      "build.base",
-      '"base" is now a root-level config option.'
-    );
-    config.base = config.build.base;
-  }
-  Object.defineProperty(resolvedBuildOptions, "base", {
-    enumerable: false,
-    get() {
-      logDeprecationWarning(
-        "build.base",
-        '"base" is now a root-level config option.',
-        new Error()
-      );
-      return resolved.base;
-    },
-  });
-
-  if (config.alias) {
-    logDeprecationWarning("alias", 'Use "resolve.alias" instead.');
-  }
-  Object.defineProperty(resolved, "alias", {
-    enumerable: false,
-    get() {
-      logDeprecationWarning(
-        "alias",
-        'Use "resolve.alias" instead.',
-        new Error()
-      );
-      return resolved.resolve.alias;
-    },
-  });
-
-  if (config.dedupe) {
-    logDeprecationWarning("dedupe", 'Use "resolve.dedupe" instead.');
-  }
-  Object.defineProperty(resolved, "dedupe", {
-    enumerable: false,
-    get() {
-      logDeprecationWarning(
-        "dedupe",
-        'Use "resolve.dedupe" instead.',
-        new Error()
-      );
-      return resolved.resolve.dedupe;
-    },
-  });
-
-  if (config.optimizeDeps?.keepNames) {
-    logDeprecationWarning(
-      "optimizeDeps.keepNames",
-      'Use "optimizeDeps.esbuildOptions.keepNames" instead.'
-    );
-  }
-  Object.defineProperty(resolved.optimizeDeps, "keepNames", {
-    enumerable: false,
-    get() {
-      logDeprecationWarning(
-        "optimizeDeps.keepNames",
-        'Use "optimizeDeps.esbuildOptions.keepNames" instead.',
-        new Error()
-      );
-      return resolved.optimizeDeps.esbuildOptions?.keepNames;
-    },
-  });
-
   return resolved;
 }
-
-/**
- * Resolve base. Note that some users use Vite to build for non-web targets like
- * electron or expects to deploy
- */
-// function resolveBaseUrl(
-//   base: UserConfig["base"] = "/",
-//   isBuild: boolean,
-//   logger: Logger
-// ): string {
-//   // #1669 special treatment for empty for same dir relative base
-//   if (base === "" || base === "./") {
-//     return isBuild ? base : "/";
-//   }
-//   if (base.startsWith(".")) {
-//     logger.warn(
-//       chalk.yellow.bold(
-//         `(!) invalid "base" option: ${base}. The value can only be an absolute ` +
-//           `URL, ./, or an empty string.`
-//       )
-//     );
-//     base = "/";
-//   }
-
-//   // external URL
-//   if (isExternalUrl(base)) {
-//     if (!isBuild) {
-//       // get base from full url during dev
-//       const parsed = parseUrl(base);
-//       base = parsed.pathname || "/";
-//     }
-//   } else {
-//     // ensure leading slash
-//     if (!base.startsWith("/")) {
-//       logger.warn(
-//         chalk.yellow.bold(`(!) "base" option should start with a slash.`)
-//       );
-//       base = "/" + base;
-//     }
-//   }
-
-//   // ensure ending slash
-//   if (!base.endsWith("/")) {
-//     logger.warn(
-//       chalk.yellow.bold(`(!) "base" option should end with a slash.`)
-//     );
-//     base += "/";
-//   }
-
-//   return base;
-// }
 
 function mergeConfigRecursively(
   a: Record<string, any>,
@@ -710,7 +533,7 @@ function normalizeSingleAlias({ find, replacement }: any): any {
 
 export async function loadConfigFromFile(
   configEnv: ConfigEnv,
-  configFile?: string,
+  configFile?: string | undefined,
   configRoot: string = process.cwd(),
   logLevel?: LogLevel
 ): Promise<{
@@ -721,123 +544,28 @@ export async function loadConfigFromFile(
   const start = Date.now();
 
   let resolvedPath: string | undefined;
-  let isTS = false;
-  let isMjs = false;
   let dependencies: string[] = [];
-
-  // check package.json for type: "module" and set `isMjs` to true
-  try {
-    const pkg = lookupFile(configRoot, ["package.json"]);
-    if (pkg && JSON.parse(pkg).type === "module") {
-      isMjs = true;
-    }
-  } catch (e) {}
-
-  if (configFile) {
-    // explicit config path is always resolved from cwd
-    resolvedPath = path.resolve(configFile);
-    isTS = configFile.endsWith(".ts");
-  } else {
-    // implicit config file loaded from inline root (if present)
-    // otherwise from cwd
-    const jsconfigFile = path.resolve(configRoot, "vite.config.js");
-    if (fs.existsSync(jsconfigFile)) {
-      resolvedPath = jsconfigFile;
-    }
-
-    if (!resolvedPath) {
-      const mjsconfigFile = path.resolve(configRoot, "vite.config.mjs");
-      if (fs.existsSync(mjsconfigFile)) {
-        resolvedPath = mjsconfigFile;
-        isMjs = true;
-      }
-    }
-
-    if (!resolvedPath) {
-      const tsconfigFile = path.resolve(configRoot, "vite.config.ts");
-      if (fs.existsSync(tsconfigFile)) {
-        resolvedPath = tsconfigFile;
-        isTS = true;
-      }
-    }
-  }
-
-  if (!resolvedPath) {
-    debug("no config file found.");
-    return null;
+  const tsconfigFile = path.resolve(configRoot, "vite.config.ts");
+  if (fs.existsSync(tsconfigFile)) {
+    resolvedPath = tsconfigFile;
   }
 
   try {
-    let userConfig: UserConfigExport | undefined;
-
-    if (isMjs) {
-      const fileUrl = require("url").pathToFileURL(resolvedPath);
-      if (isTS) {
-        // before we can register loaders without requiring users to run node
-        // with --experimental-loader themselves, we have to do a hack here:
-        // bundle the config file w/ ts transforms first, write it to disk,
-        // load it with native Node ESM, then delete the file.
-        const bundled = await bundleConfigFile(resolvedPath, true);
-        dependencies = bundled.dependencies;
-        fs.writeFileSync(resolvedPath + ".js", bundled.code);
-        userConfig = (await eval(`import(fileUrl + '.js?t=${Date.now()}')`))
-          .default;
-        fs.unlinkSync(resolvedPath + ".js");
-        debug(
-          `TS + native esm config loaded in ${Date.now() - start}ms`,
-          fileUrl
-        );
-      } else {
-        // using eval to avoid this from being compiled away by TS/Rollup
-        // append a query so that we force reload fresh config in case of
-        // server restart
-        userConfig = (await eval(`import(fileUrl + '?t=${Date.now()}')`))
-          .default;
-        debug(`native esm config loaded in ${Date.now() - start}ms`, fileUrl);
-      }
-    }
-
-    if (!userConfig && !isTS && !isMjs) {
-      // 1. try to directly require the module (assuming commonjs)
-      try {
-        // clear cache in case of server restart
-        delete require.cache[require.resolve(resolvedPath)];
-        userConfig = require(resolvedPath);
-        debug(`cjs config loaded in ${Date.now() - start}ms`);
-      } catch (e) {
-        const ignored = new RegExp(
-          [
-            `Cannot use import statement`,
-            `Must use import to load ES Module`,
-            // #1635, #2050 some Node 12.x versions don't have esm detection
-            // so it throws normal syntax errors when encountering esm syntax
-            `Unexpected token`,
-            `Unexpected identifier`,
-          ].join("|")
-        );
-        if (!ignored.test(e.message)) {
-          throw e;
-        }
-      }
-    }
-
-    if (!userConfig) {
-      // 2. if we reach here, the file is ts or using es import syntax, or
-      // the user has type: "module" in their package.json (#917)
-      // transpile es import syntax to require syntax using rollup.
-      // lazy require rollup (it's actually in dependencies)
-      const bundled = await bundleConfigFile(resolvedPath);
-      dependencies = bundled.dependencies;
-      userConfig = await loadConfigFromBundledFile(resolvedPath, bundled.code);
-      debug(`bundled config file loaded in ${Date.now() - start}ms`);
-    }
+    // if we reach here, the file is ts or using es import syntax, or
+    // the user has type: "module" in their package.json (#917)
+    // transpile es import syntax to require syntax using rollup.
+    // lazy require rollup (it's actually in dependencies)
+    const bundled = await bundleConfigFile(resolvedPath);
+    dependencies = bundled.dependencies;
+    let userConfig = (await loadConfigFromBundledFile(
+      resolvedPath,
+      bundled.code
+    )) as UserConfigExport;
+    debug(`bundled config file loaded in ${Date.now() - start}ms`);
 
     const config = await (typeof userConfig === "function"
       ? userConfig(configEnv)
       : userConfig);
-    if (!isObject(config)) {
-      throw new Error(`config must export or return an object.`);
-    }
     return {
       path: normalizePath(resolvedPath),
       config,
@@ -933,60 +661,3 @@ async function loadConfigFromBundledFile(
   require.extensions[extension] = defaultLoader;
   return config;
 }
-
-// export function loadEnv(
-//   mode: string,
-//   envDir: string,
-//   prefix = "VITE_"
-// ): Record<string, string> {
-//   if (mode === "local") {
-//     throw new Error(
-//       `"local" cannot be used as a mode name because it conflicts with ` +
-//         `the .local postfix for .env files.`
-//     );
-//   }
-
-//   const env: Record<string, string> = {};
-//   const envFiles = [
-//     /** mode local file */ `.env.${mode}.local`,
-//     /** mode file */ `.env.${mode}`,
-//     /** local file */ `.env.local`,
-//     /** default file */ `.env`,
-//   ];
-
-//   // check if there are actual env variables starting with VITE_*
-//   // these are typically provided inline and should be prioritized
-//   for (const key in process.env) {
-//     if (key.startsWith(prefix) && env[key] === undefined) {
-//       env[key] = process.env[key] as string;
-//     }
-//   }
-
-//   for (const file of envFiles) {
-//     const path = lookupFile(envDir, [file], true);
-//     if (path) {
-//       const parsed = dotenv.parse(fs.readFileSync(path), {
-//         debug: !!process.env.DEBUG || undefined,
-//       });
-
-//       // let environment variables use each other
-//       dotenvExpand({
-//         parsed,
-//         // prevent process.env mutation
-//         ignoreProcessEnv: true,
-//       } as any);
-
-//       // only keys that start with prefix are exposed to client
-//       for (const [key, value] of Object.entries(parsed)) {
-//         if (key.startsWith(prefix) && env[key] === undefined) {
-//           env[key] = value as any;
-//         } else if (key === "NODE_ENV") {
-//           // NODE_ENV override in .env file
-//           process.env.VITE_USER_NODE_ENV = value as any;
-//         }
-//       }
-//     }
-//   }
-
-//   return env;
-// }
